@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #define MAX 100
 #define OPERATOR_PLUS '+'
@@ -7,11 +8,28 @@
 #define BRACKET_OPEN '('
 #define BRACKET_CLOSE ')'
 
+//括弧内の数式についてのみ処理する
+//引数で与えられる数式に括弧が含まれないことは保証されている
+int calc(char* input){
+    //負の数で始まる場合を処理
+    char tmp[200];
+    if(input[0] == '-'){
+        tmp[0] = '0';
+        int i = 0;
+        while(input[i] != '\0'){
+            tmp[i+1] = input[i];
+            i++;
+        }
+    } else{
+        strcpy(tmp, input);
+    }
+
+
+}
+
 void main(){
     char input[MAX];
     scanf("%[^\n]", &input);
-
-    printf("Hello %s\n", input);
 
     //sanitize
     char formula[MAX];
@@ -29,5 +47,5 @@ void main(){
     //validate
 
 
-    printf("Hello %s", formula);
+    printf("Sanitized %s", formula);
 }
