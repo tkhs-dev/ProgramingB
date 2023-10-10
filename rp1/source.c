@@ -43,6 +43,7 @@ int calc(char* input){
         strcpy(tmp, input);
     }
 
+    //演算子の数を数え上げる
     int count = 0;
     int i = 0;
     while(tmp[i] != '\0'){
@@ -51,6 +52,8 @@ int calc(char* input){
         }
         i++;
     }
+
+    //演算子ごとに分割して構造体に格納する
     struct block blocks[count];
     i = 0;
     count = 0;
@@ -59,6 +62,8 @@ int calc(char* input){
             blocks[count].operator = tmp[i];
 
             char tmp2[20];
+
+            //演算子のあとの被演算子
             int j = i+1;
             while(tmp[j] != '\0' && tmp[j] != OPERATOR_PLUS && tmp[j] != OPERATOR_MINUS && tmp[j] != OPERATOR_MULTIPLY){
                 j++;
@@ -67,6 +72,7 @@ int calc(char* input){
             tmp2[j-i-1] = '\0';
             blocks[count].operand2 = atoi(tmp2);
 
+            //演算子の前の被演算子
             j = i-1;
             while(j>=0 && tmp[j] != OPERATOR_PLUS && tmp[j] != OPERATOR_MINUS && tmp[j] != OPERATOR_MULTIPLY){
                 j--;
@@ -87,6 +93,8 @@ int calc(char* input){
             blocks[i].operand1 = res;
             blocks[i].operator = OPERATOR_PLUS;
             blocks[i].operand2 = 0;
+
+            //前後の被演算子を更新
             if(i+1 != count){
                 blocks[i+1].operand1 = 0;
             }
@@ -94,6 +102,7 @@ int calc(char* input){
                 blocks[i-1].operand2 = res;
             }
         }
+        //減算を負の数の加算に変換
         if(blocks[i].operator == OPERATOR_MINUS){
             blocks[i].operator = OPERATOR_PLUS;
             blocks[i].operand2 = blocks[i].operand2 * -1;
@@ -102,6 +111,8 @@ int calc(char* input){
             }
         }
     }
+
+    //加算のみの数式を計算
     int res = 0;
     for(int i=count-1; i>=0; i--){
         res = res + blocks[i].operand1;
@@ -179,12 +190,13 @@ void main(){
     }
     printf("Sanitized %s\n", formula);
 
+    //calculate
     char tmp[MAX];
-    //calc
     while(1){
+        //括弧の中身を抜き出す
         i = 0;
-        int j = 0;
-        int flg = 0;
+        int j;
+        int flg = 0; //括弧の有無のフラグ
         while(formula[i] != '\0'){
             if(formula[i] == BRACKET_CLOSE){
                 j = i-1;
@@ -199,10 +211,12 @@ void main(){
             i++;
         }
 
+        //括弧の中身を計算
         if(flg){
             char res[10];
             int calc_res = calc(tmp);
             int num = 0;
+            //計算結果が負の数の場合0-の形にする
             if(calc_res < 0){
                 num = sprintf(res,"0%d", calc_res);
             }else{
@@ -227,6 +241,8 @@ void main(){
                 m++;
             }
             tmp[m]='\0';
+
+            //formulaの更新
             i = 0;
             while(tmp[i] != '\0'){
                 formula[i] = tmp[i];
@@ -236,6 +252,8 @@ void main(){
         }
         if(flg == 0) break;
     }
+
+    //最終的な計算
     int res = calc(formula);
     printf("Calculated: %d", res);
 }
