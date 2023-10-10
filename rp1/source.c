@@ -188,7 +188,7 @@ void main(){
         }
         i++;
     }
-    printf("Sanitized %s\n", formula);
+    //printf("Sanitized %s\n", formula);
 
     //calculate
     char tmp[MAX];
@@ -255,5 +255,5 @@ void main(){
 
     //最終的な計算
     int res = calc(formula);
-    printf("Calculated: %d", res);
+    printf("%d", res);
 }
