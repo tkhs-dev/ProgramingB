@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #define MAX 100
 #define OPERATOR_PLUS '+'
@@ -12,7 +13,7 @@
 //引数で与えられる数式に括弧が含まれないことは保証されている
 int calc(char* input){
     //負の数で始まる場合を処理
-    char tmp[200]={0};
+    char tmp[200];
     if(input[0] == '-'){
         tmp[0] = '0';
         int i = 0;
@@ -20,11 +21,12 @@ int calc(char* input){
             tmp[i+1] = input[i];
             i++;
         }
+        tmp[i+1] = '\0';
     } else{
         strcpy(tmp, input);
     }
 
-
+    return 10;
 }
 
 void main(){
@@ -43,9 +45,6 @@ void main(){
         count_in++;
     }
     formula[count_res] = '\0';
-
-    printf("%s\n", input);
-    printf("%s\n", formula);
 
     //validate
     int i = 0;
@@ -95,7 +94,60 @@ void main(){
         }
         i++;
     }
+    printf("Sanitized %s\n", formula);
 
+    char tmp[MAX];
+    //calc
+    while(1){
+        i = 0;
+        int j = 0;
+        int flg = 0;
+        while(formula[i] != '\0'){
+            if(formula[i] == BRACKET_CLOSE){
+                j = i-1;
+                while(formula[j]!=BRACKET_OPEN){
+                    j--;
+                }
+                strncpy(tmp, formula+j+1,i-j-1);
+                tmp[i-j-1] = '\0';
+                printf("%s\n",tmp);
+                flg = 1;
+                break;
+            }
+            i++;
+        }
 
-    printf("Sanitized %s", formula);
+        if(flg){
+            char res[10];
+            int num = sprintf(res,"%d", calc(tmp));
+
+            //計算結果の置き換え
+            int m = 0;
+            int k = 0;
+            while(formula[k] != '\0'){
+                if(j==k){
+                    int l = 0;
+                    while(l!=num){
+                        tmp[m+l] = res[l];
+                        l++;
+                    }
+                    k = i+1;
+                    m=m+l;
+                }
+                tmp[m] = formula[k];
+                k++;
+                m++;
+            }
+            tmp[m]='\0';
+            i = 0;
+            while(tmp[i] != '\0'){
+                formula[i] = tmp[i];
+                i++;
+            }
+            formula[i] = '\0';
+            printf("aaa %s\n", tmp);
+        }
+        if(flg == 0) break;
+    }
+    printf("Calculated: %s", formula);
 }
