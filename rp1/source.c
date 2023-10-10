@@ -51,7 +51,7 @@ void main(){
     int i = 0;
     while(formula[i] != '\0'){
         if(formula[i] == OPERATOR_PLUS || formula[i] == OPERATOR_MINUS || formula[i] == OPERATOR_MULTIPLY){
-            if((formula[i+1] < '0' && formula[i+1] > '9')&&formula[i+1] != BRACKET_OPEN){
+            if((formula[i+1] < '0' || formula[i+1] > '9')&&formula[i+1] != BRACKET_OPEN){
                 printf("Invalid formula");
                 return;
             }
