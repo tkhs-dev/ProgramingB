@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
+#include <stdlib.h>
 
 #define MAX 100
 #define OPERATOR_PLUS '+'
@@ -8,6 +8,23 @@
 #define OPERATOR_MULTIPLY '*'
 #define BRACKET_OPEN '('
 #define BRACKET_CLOSE ')'
+
+struct block{
+    int operand1;
+    int operand2;
+    char operator;
+};
+
+int calc_block(struct block block){
+    if(block.operator == OPERATOR_PLUS){
+        return block.operand1 + block.operand2;
+    } else if(block.operator == OPERATOR_MINUS){
+        return block.operand1 - block.operand2;
+    } else if(block.operator == OPERATOR_MULTIPLY){
+        return block.operand1 * block.operand2;
+    }
+    return 0;
+}
 
 //括弧内の数式についてのみ処理する
 //引数で与えられる数式に括弧が含まれないことは保証されている
@@ -26,7 +43,73 @@ int calc(char* input){
         strcpy(tmp, input);
     }
 
-    return 10;
+    int count = 0;
+    int i = 0;
+    while(tmp[i] != '\0'){
+        if(tmp[i] == OPERATOR_PLUS || tmp[i] == OPERATOR_MINUS || tmp[i] == OPERATOR_MULTIPLY){
+            count++;
+        }
+        i++;
+    }
+    struct block blocks[count];
+    i = 0;
+    count = 0;
+    while(tmp[i] != '\0'){
+        if(tmp[i] == OPERATOR_PLUS || tmp[i] == OPERATOR_MINUS || tmp[i] == OPERATOR_MULTIPLY){
+            blocks[count].operator = tmp[i];
+
+            char tmp2[20];
+            int j = i+1;
+            while(tmp[j] != '\0' && tmp[j] != OPERATOR_PLUS && tmp[j] != OPERATOR_MINUS && tmp[j] != OPERATOR_MULTIPLY){
+                j++;
+            }
+            strncpy(tmp2, tmp+i+1, j-i-1);
+            tmp2[j-i-1] = '\0';
+            blocks[count].operand2 = atoi(tmp2);
+
+            j = i-1;
+            while(j>=0 && tmp[j] != OPERATOR_PLUS && tmp[j] != OPERATOR_MINUS && tmp[j] != OPERATOR_MULTIPLY){
+                j--;
+            }
+            strncpy(tmp2, tmp+j+1, i-j-1);
+            tmp2[i-j-1] = '\0';
+            blocks[count].operand1 = atoi(tmp2);
+
+            count++;
+        }
+        i++;
+    }
+
+    //掛け算と負の数を先に処理してすべて加算に変換する
+    for(int i=count-1; i>=0; i--){
+        if(blocks[i].operator == OPERATOR_MULTIPLY){
+            int res = calc_block(blocks[i]);
+            blocks[i].operand1 = res;
+            blocks[i].operator = OPERATOR_PLUS;
+            blocks[i].operand2 = 0;
+            if(i+1 != count){
+                blocks[i+1].operand1 = 0;
+            }
+            if(i-1 >= 0){
+                blocks[i-1].operand2 = res;
+            }
+        }
+        if(blocks[i].operator == OPERATOR_MINUS){
+            blocks[i].operator = OPERATOR_PLUS;
+            blocks[i].operand2 = blocks[i].operand2 * -1;
+            if(i+1 != count){
+                blocks[i+1].operand1 = blocks[i+1].operand1 * -1;
+            }
+        }
+    }
+    int res = 0;
+    for(int i=count-1; i>=0; i--){
+        res = res + blocks[i].operand1;
+    }
+    res = res + blocks[count-1].operand2;
+
+
+    return res;
 }
 
 void main(){
@@ -110,7 +193,6 @@ void main(){
                 }
                 strncpy(tmp, formula+j+1,i-j-1);
                 tmp[i-j-1] = '\0';
-                printf("%s\n",tmp);
                 flg = 1;
                 break;
             }
@@ -119,7 +201,13 @@ void main(){
 
         if(flg){
             char res[10];
-            int num = sprintf(res,"%d", calc(tmp));
+            int calc_res = calc(tmp);
+            int num = 0;
+            if(calc_res < 0){
+                num = sprintf(res,"0%d", calc_res);
+            }else{
+                num = sprintf(res,"%d", calc_res);
+            }
 
             //計算結果の置き換え
             int m = 0;
@@ -145,9 +233,9 @@ void main(){
                 i++;
             }
             formula[i] = '\0';
-            printf("aaa %s\n", tmp);
         }
         if(flg == 0) break;
     }
-    printf("Calculated: %s", formula);
+    int res = calc(formula);
+    printf("Calculated: %d", res);
 }
