@@ -12,7 +12,7 @@
 //引数で与えられる数式に括弧が含まれないことは保証されている
 int calc(char* input){
     //負の数で始まる場合を処理
-    char tmp[200];
+    char tmp[200]={0};
     if(input[0] == '-'){
         tmp[0] = '0';
         int i = 0;
@@ -35,7 +35,7 @@ void main(){
     char formula[MAX];
     int count_in = 0;
     int count_res = 0;
-    while(count_in < MAX){
+    while(input[count_in] != '\0'){
         if(input[count_in] == OPERATOR_PLUS || input[count_in] == OPERATOR_MINUS || input[count_in] == OPERATOR_MULTIPLY || input[count_in] == BRACKET_OPEN || input[count_in] == BRACKET_CLOSE || (input[count_in] >= '0' && input[count_in] <= '9')){
             formula[count_res] = input[count_in];
             count_res++;
@@ -43,6 +43,9 @@ void main(){
         count_in++;
     }
     formula[count_res] = '\0';
+
+    printf("%s\n", input);
+    printf("%s\n", formula);
 
     //validate
     int i = 0;
