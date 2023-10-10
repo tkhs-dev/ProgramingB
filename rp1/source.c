@@ -52,24 +52,29 @@ void main(){
     while(formula[i] != '\0'){
         if(formula[i] == OPERATOR_PLUS || formula[i] == OPERATOR_MINUS || formula[i] == OPERATOR_MULTIPLY){
             if((formula[i+1] < '0' || formula[i+1] > '9')&&formula[i+1] != BRACKET_OPEN){
+                //検証: 演算子の後に数字が続かない場合
                 printf("Invalid formula");
                 return;
             }
         }
         if(formula[i] == BRACKET_CLOSE && (formula[i+1] >= '0' && formula[i+1] <= '9')){
+            //検証: )の後に数字が続く場合
             printf("Invalid formula");
             return;
         }
         if(formula[i] == BRACKET_OPEN){
             int j = i+1;
             if(formula[i-1] >= '0' && formula[i-1] <= '9'){
+                //検証: 数字の後に(が続く場合
                 printf("Invalid formula");
                 return;
             }
             if(formula[j] == OPERATOR_PLUS || formula[j] == OPERATOR_MULTIPLY){
+                //検証: (の後に+または*が続く場合
                 printf("Invalid formula");
                 return;
             }
+
             int count = 1;
             while(formula[j] != '\0'){
                 if(formula[j] == BRACKET_OPEN){
@@ -83,6 +88,7 @@ void main(){
                 j++;
             }
             if(count != 0){
+                //検証: 括弧の数が合わない場合
                 printf("Invalid formula");
                 return;
             }
