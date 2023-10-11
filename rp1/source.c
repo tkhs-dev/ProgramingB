@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MAX 100
+#define MAX 1000
 #define OPERATOR_PLUS '+'
 #define OPERATOR_MINUS '-'
 #define OPERATOR_MULTIPLY '*'
@@ -123,7 +123,7 @@ int calc(char* input){
     return res;
 }
 
-void main(){
+int main(){
     char input[MAX];
     scanf("%[^\n]", &input);
 
@@ -147,25 +147,25 @@ void main(){
             if((formula[i+1] < '0' || formula[i+1] > '9')&&formula[i+1] != BRACKET_OPEN){
                 //検証: 演算子の後に数字が続かない場合
                 printf("Invalid formula");
-                return;
+                return -1;
             }
         }
         if(formula[i] == BRACKET_CLOSE && (formula[i+1] >= '0' && formula[i+1] <= '9')){
             //検証: )の後に数字が続く場合
             printf("Invalid formula");
-            return;
+            return -1;
         }
         if(formula[i] == BRACKET_OPEN){
             int j = i+1;
             if(formula[i-1] >= '0' && formula[i-1] <= '9'){
                 //検証: 数字の後に(が続く場合
                 printf("Invalid formula");
-                return;
+                return -1;
             }
             if(formula[j] == OPERATOR_PLUS || formula[j] == OPERATOR_MULTIPLY){
                 //検証: (の後に+または*が続く場合
                 printf("Invalid formula");
-                return;
+                return -1;
             }
 
             int count = 1;
@@ -183,7 +183,7 @@ void main(){
             if(count != 0){
                 //検証: 括弧の数が合わない場合
                 printf("Invalid formula");
-                return;
+                return -1;
             }
         }
         i++;
@@ -256,4 +256,6 @@ void main(){
     //最終的な計算
     int res = calc(formula);
     printf("%d", res);
+
+    return 0;
 }
