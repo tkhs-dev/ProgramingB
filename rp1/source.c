@@ -65,6 +65,9 @@ int calc(char* input){
 
             //演算子のあとの被演算子
             int j = i+1;
+            if(tmp[j] == OPERATOR_MINUS){
+                j++;
+            }
             while(tmp[j] != '\0' && tmp[j] != OPERATOR_PLUS && tmp[j] != OPERATOR_MINUS && tmp[j] != OPERATOR_MULTIPLY){
                 j++;
             }
@@ -77,10 +80,16 @@ int calc(char* input){
             while(j>=0 && tmp[j] != OPERATOR_PLUS && tmp[j] != OPERATOR_MINUS && tmp[j] != OPERATOR_MULTIPLY){
                 j--;
             }
+            if(tmp[j] == OPERATOR_MINUS && j!=0 && !(tmp[j-1] >= '0' && tmp[j-1] <= '9')){
+                j--;
+            }
             strncpy(tmp2, tmp+j+1, i-j-1);
             tmp2[i-j-1] = '\0';
             blocks[count].operand1 = atoi(tmp2);
 
+            if(tmp[i+1] == OPERATOR_MINUS){
+                i++;
+            }
             count++;
         }
         i++;
@@ -215,13 +224,7 @@ int main(){
         if(flg){
             char res[10];
             int calc_res = calc(tmp);
-            int num = 0;
-            //計算結果が負の数の場合0-の形にする
-            if(calc_res < 0){
-                num = sprintf(res,"0%d", calc_res);
-            }else{
-                num = sprintf(res,"%d", calc_res);
-            }
+            int num = sprintf(res,"%d", calc_res);
 
             //計算結果の置き換え
             int m = 0;
