@@ -48,6 +48,9 @@ int calc(char* input){
     int i = 0;
     while(tmp[i] != '\0'){
         if(tmp[i] == OPERATOR_PLUS || tmp[i] == OPERATOR_MINUS || tmp[i] == OPERATOR_MULTIPLY){
+            if(tmp[i+1] == OPERATOR_MINUS){
+                i++; //負の値としてのマイナス記号を無視する
+            }
             count++;
         }
         i++;
@@ -66,7 +69,7 @@ int calc(char* input){
             //演算子のあとの被演算子
             int j = i+1;
             if(tmp[j] == OPERATOR_MINUS){
-                j++;
+                j++; //負の値としてのマイナス記号を無視する
             }
             while(tmp[j] != '\0' && tmp[j] != OPERATOR_PLUS && tmp[j] != OPERATOR_MINUS && tmp[j] != OPERATOR_MULTIPLY){
                 j++;
@@ -81,14 +84,14 @@ int calc(char* input){
                 j--;
             }
             if(tmp[j] == OPERATOR_MINUS && j!=0 && !(tmp[j-1] >= '0' && tmp[j-1] <= '9')){
-                j--;
+                j--; //負の値としてのマイナス記号を無視する
             }
             strncpy(tmp2, tmp+j+1, i-j-1);
             tmp2[i-j-1] = '\0';
             blocks[count].operand1 = atoi(tmp2);
 
             if(tmp[i+1] == OPERATOR_MINUS){
-                i++;
+                i++; //負の値としてのマイナス記号を無視する
             }
             count++;
         }
