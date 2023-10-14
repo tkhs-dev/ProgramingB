@@ -29,23 +29,21 @@ int calc_block(struct block block){
 //括弧内の数式についてのみ処理する
 //引数で与えられる数式に括弧が含まれないことは保証されている
 int calc(char* input){
-    //負の数で始まる場合を処理
     char tmp[200];
-    if(input[0] == '-'){
-        tmp[0] = '0';
-        int i = 0;
-        while(input[i] != '\0'){
-            tmp[i+1] = input[i];
-            i++;
-        }
-        tmp[i+1] = '\0';
-    } else{
-        strcpy(tmp, input);
+
+    //先頭に0+を追加しておく for #1
+    tmp[0] = '0';
+    tmp[1] = OPERATOR_PLUS;
+    int i = 0;
+    while(input[i] != '\0'){
+        tmp[i+2] = input[i];
+        i++;
     }
+    tmp[i+2] = '\0';
 
     //演算子の数を数え上げる
     int count = 0;
-    int i = 0;
+    i = 0;
     while(tmp[i] != '\0'){
         if(tmp[i] == OPERATOR_PLUS || tmp[i] == OPERATOR_MINUS || tmp[i] == OPERATOR_MULTIPLY){
             if(tmp[i+1] == OPERATOR_MINUS){
