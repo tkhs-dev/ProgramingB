@@ -223,7 +223,7 @@ int main(){
 
         //括弧の中身を計算
         if(flg){
-            char res[10];
+            char res[20];
             int calc_res = calc(tmp);
             int num = sprintf(res,"%d", calc_res);
 
