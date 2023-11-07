@@ -17,7 +17,7 @@ struct block{
     char operator;
 };
 
-int calc_block(struct block block){
+double calc_block(struct block block){
     if(block.operator == OPERATOR_PLUS){
         return block.operand1 + block.operand2;
     } else if(block.operator == OPERATOR_MINUS){
@@ -32,7 +32,7 @@ int calc_block(struct block block){
 
 //括弧内の数式についてのみ処理する
 //引数で与えられる数式に括弧が含まれないことは保証されている
-int calc(char* input){
+double calc(char* input){
     char tmp[200];
 
     //先頭に0+を追加しておく for #1
@@ -78,7 +78,7 @@ int calc(char* input){
             }
             strncpy(tmp2, tmp+i+1, j-i-1);
             tmp2[j-i-1] = '\0';
-            blocks[count].operand2 = atoi(tmp2);
+            blocks[count].operand2 = atof(tmp2);
 
             //演算子の前の被演算子
             j = i-1;
@@ -90,7 +90,7 @@ int calc(char* input){
             }
             strncpy(tmp2, tmp+j+1, i-j-1);
             tmp2[i-j-1] = '\0';
-            blocks[count].operand1 = atoi(tmp2);
+            blocks[count].operand1 = atof(tmp2);
 
             if(tmp[i+1] == OPERATOR_MINUS){
                 i++; //負の値としてのマイナス記号を無視する
@@ -103,7 +103,7 @@ int calc(char* input){
     //掛け算と負の数を先に処理してすべて加算に変換する
     for(int i=count-1; i>=0; i--){
         if(blocks[i].operator == OPERATOR_MULTIPLY || blocks[i].operator == OPERATOR_DIVIDE){
-            int res = calc_block(blocks[i]);
+            double res = calc_block(blocks[i]);
             blocks[i].operand1 = res;
             blocks[i].operator = OPERATOR_PLUS;
             blocks[i].operand2 = 0;
@@ -127,7 +127,7 @@ int calc(char* input){
     }
 
     //加算のみの数式を計算
-    int res = 0;
+    double res = 0;
     for(int i=count-1; i>=0; i--){
         res = res + blocks[i].operand1;
     }
@@ -292,8 +292,8 @@ int main(){
     }
 
     //最終的な計算
-    int res = calc(formula);
-    printf("%d", res);
+    double res = calc(formula);
+    printf("%lf", res);
 
     return 0;
 }
