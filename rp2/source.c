@@ -7,6 +7,7 @@
 #define OPERATOR_MINUS '-'
 #define OPERATOR_MULTIPLY '*'
 #define OPERATOR_DIVIDE '/'
+#define OPERATOR_POWER '^'
 #define BRACKET_OPEN '('
 #define BRACKET_CLOSE ')'
 #define DOT '.'
@@ -16,6 +17,14 @@ struct block{
     double operand2;
     char operator;
 };
+
+double pow(double x, int y){
+    double result = 1;
+    for(int i = 0; i < y; i++){
+        result *= x;
+    }
+    return result;
+}
 
 double calc_block(struct block block){
     if(block.operator == OPERATOR_PLUS){
@@ -27,9 +36,18 @@ double calc_block(struct block block){
     }else if(block.operator == OPERATOR_DIVIDE){
         if(block.operand2 == 0){
             printf("ゼロ除算エラー\n");
-            exit(1);
+            exit(-1);
         }
         return block.operand1 / block.operand2;
+    }else if(block.operator == OPERATOR_POWER){
+        if(block.operand2 < 0){
+            printf("負数の累乗は未対応です\n");
+            exit(-1);
+        }else if(block.operand2 != (int)block.operand2){
+            printf("実数の累乗は未対応です\n");
+            exit(-1);
+        }
+        return pow(block.operand1, block.operand2);
     }
     return 0;
 }
@@ -53,7 +71,7 @@ double calc(char* input){
     int count = 0;
     i = 0;
     while(tmp[i] != '\0'){
-        if(tmp[i] == OPERATOR_PLUS || tmp[i] == OPERATOR_MINUS || tmp[i] == OPERATOR_MULTIPLY || tmp[i] == OPERATOR_DIVIDE){
+        if(tmp[i] == OPERATOR_PLUS || tmp[i] == OPERATOR_MINUS || tmp[i] == OPERATOR_MULTIPLY || tmp[i] == OPERATOR_DIVIDE || tmp[i] == OPERATOR_POWER){
             if(tmp[i+1] == OPERATOR_MINUS){
                 i++; //負の値としてのマイナス記号を無視する
             }
@@ -67,7 +85,7 @@ double calc(char* input){
     i = 0;
     count = 0;
     while(tmp[i] != '\0'){
-        if(tmp[i] == OPERATOR_PLUS || tmp[i] == OPERATOR_MINUS || tmp[i] == OPERATOR_MULTIPLY || tmp[i] == OPERATOR_DIVIDE){
+        if(tmp[i] == OPERATOR_PLUS || tmp[i] == OPERATOR_MINUS || tmp[i] == OPERATOR_MULTIPLY || tmp[i] == OPERATOR_DIVIDE || tmp[i] == OPERATOR_POWER){
             blocks[count].operator = tmp[i];
 
             char tmp2[20];
@@ -77,7 +95,7 @@ double calc(char* input){
             if(tmp[j] == OPERATOR_MINUS){
                 j++; //負の値としてのマイナス記号を無視する
             }
-            while(tmp[j] != '\0' && tmp[j] != OPERATOR_PLUS && tmp[j] != OPERATOR_MINUS && tmp[j] != OPERATOR_MULTIPLY && tmp[j] != OPERATOR_DIVIDE){
+            while(tmp[j] != '\0' && tmp[j] != OPERATOR_PLUS && tmp[j] != OPERATOR_MINUS && tmp[j] != OPERATOR_MULTIPLY && tmp[j] != OPERATOR_DIVIDE && tmp[j] != OPERATOR_POWER){
                 j++;
             }
             strncpy(tmp2, tmp+i+1, j-i-1);
@@ -86,7 +104,7 @@ double calc(char* input){
 
             //演算子の前の被演算子
             j = i-1;
-            while(j>=0 && tmp[j] != OPERATOR_PLUS && tmp[j] != OPERATOR_MINUS && tmp[j] != OPERATOR_MULTIPLY && tmp[j] != OPERATOR_DIVIDE){
+            while(j>=0 && tmp[j] != OPERATOR_PLUS && tmp[j] != OPERATOR_MINUS && tmp[j] != OPERATOR_MULTIPLY && tmp[j] != OPERATOR_DIVIDE && tmp[j] != OPERATOR_POWER){
                 j--;
             }
             if(tmp[j] == OPERATOR_MINUS && j!=0 && !(tmp[j-1] >= '0' && tmp[j-1] <= '9')){
@@ -106,7 +124,7 @@ double calc(char* input){
 
     //掛け算と負の数を先に処理してすべて加算に変換する
     for(int i=count-1; i>=0; i--){
-        if(blocks[i].operator == OPERATOR_MULTIPLY || blocks[i].operator == OPERATOR_DIVIDE){
+        if(blocks[i].operator == OPERATOR_MULTIPLY || blocks[i].operator == OPERATOR_DIVIDE || blocks[i].operator == OPERATOR_POWER){
             double res = calc_block(blocks[i]);
             blocks[i].operand1 = res;
             blocks[i].operator = OPERATOR_PLUS;
@@ -187,7 +205,7 @@ int main(){
     int count_in = 0;
     int count_res = 0;
     while(input[count_in] != '\0'){
-        if(input[count_in] == OPERATOR_PLUS || input[count_in] == OPERATOR_MINUS || input[count_in] == OPERATOR_MULTIPLY || input[count_in] == OPERATOR_DIVIDE || input[count_in] == BRACKET_OPEN || input[count_in] == BRACKET_CLOSE || input[count_in] == DOT|| (input[count_in] >= '0' && input[count_in] <= '9')){
+        if(input[count_in] == OPERATOR_PLUS || input[count_in] == OPERATOR_MINUS || input[count_in] == OPERATOR_MULTIPLY || input[count_in] == OPERATOR_DIVIDE || input[count_in] == OPERATOR_POWER || input[count_in] == BRACKET_OPEN || input[count_in] == BRACKET_CLOSE || input[count_in] == DOT|| (input[count_in] >= '0' && input[count_in] <= '9')){
             formula[count_res] = input[count_in];
             count_res++;
         }
@@ -198,7 +216,7 @@ int main(){
     //validate
     int i = 0;
     while(formula[i] != '\0'){
-        if(formula[i] == OPERATOR_PLUS || formula[i] == OPERATOR_MINUS || formula[i] == OPERATOR_MULTIPLY || formula[i] == OPERATOR_DIVIDE){
+        if(formula[i] == OPERATOR_PLUS || formula[i] == OPERATOR_MINUS || formula[i] == OPERATOR_MULTIPLY || formula[i] == OPERATOR_DIVIDE || formula[i] == OPERATOR_POWER){
             if((formula[i+1] < '0' || formula[i+1] > '9')&&formula[i+1] != BRACKET_OPEN){
                 //検証: 演算子の後に数字が続かない場合
                 printf("Invalid formula");
@@ -217,7 +235,7 @@ int main(){
                 printf("Invalid formula");
                 return -1;
             }
-            if(formula[j] == OPERATOR_PLUS || formula[j] == OPERATOR_MULTIPLY || formula[j] == OPERATOR_DIVIDE){
+            if(formula[j] == OPERATOR_PLUS || formula[j] == OPERATOR_MULTIPLY || formula[j] == OPERATOR_DIVIDE || formula[j] == OPERATOR_POWER){
                 //検証: (の後に+または*が続く場合
                 printf("Invalid formula");
                 return -1;
@@ -253,7 +271,7 @@ int main(){
                 return -1;
             }
             int j = 1;
-            while(formula[i-j] != OPERATOR_PLUS && formula[i-j] != OPERATOR_MINUS && formula[i-j] != OPERATOR_MULTIPLY && formula[i-j] != OPERATOR_DIVIDE && formula[i-j] != BRACKET_OPEN && formula[i-j] != BRACKET_CLOSE && i-j >= 0){
+            while(formula[i-j] != OPERATOR_PLUS && formula[i-j] != OPERATOR_MINUS && formula[i-j] != OPERATOR_MULTIPLY && formula[i-j] != OPERATOR_DIVIDE && formula[i-j] != OPERATOR_POWER && formula[i-j] != BRACKET_OPEN && formula[i-j] != BRACKET_CLOSE && i-j >= 0){
                 if(formula[i-j] == DOT){
                     //検証: .が2つ以上続く場合
                     printf("Invalid formula");
@@ -262,7 +280,7 @@ int main(){
                 j++;
             }
             j=1;
-            while(formula[i+j] != OPERATOR_PLUS && formula[i+j] != OPERATOR_MINUS && formula[i+j] != OPERATOR_MULTIPLY && formula[i+j] != OPERATOR_DIVIDE && formula[i+j] != BRACKET_OPEN && formula[i+j] != BRACKET_CLOSE && formula[i+j] != '\0'){
+            while(formula[i+j] != OPERATOR_PLUS && formula[i+j] != OPERATOR_MINUS && formula[i+j] != OPERATOR_MULTIPLY && formula[i+j] != OPERATOR_DIVIDE && formula[i+j] != OPERATOR_POWER && formula[i+j] != BRACKET_OPEN && formula[i+j] != BRACKET_CLOSE && formula[i+j] != '\0'){
                 if(formula[i+j] == DOT){
                     //検証: .が2つ以上続く場合
                     printf("Invalid formula");
