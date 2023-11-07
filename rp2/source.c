@@ -34,7 +34,7 @@ double calc_block(struct block block){
     return 0;
 }
 
-//括弧内の数式についてのみ処理する
+//括弧内の数式について処理する
 //引数で与えられる数式に括弧が含まれないことは保証されている
 double calc(char* input){
     char tmp[200];
@@ -141,6 +141,43 @@ double calc(char* input){
     return res;
 }
 
+//括弧を含む式を再帰的に計算する
+double recursive_calc(char* input){
+    //括弧がなくなるまで繰り返す
+    int i = 0;
+    while(input[i] != '\0'){
+        if(input[i] == BRACKET_OPEN){
+            int j = i+1;
+            int count = 1;
+            while(count != 0){
+                if(input[j] == BRACKET_OPEN){
+                    count++;
+                }
+                if(input[j] == BRACKET_CLOSE){
+                    count--;
+                }
+                j++;
+            }
+            char tmp[200];
+            strncpy(tmp, input+i+1, j-i-2);
+            tmp[j-i-2] = '\0';
+            double res = recursive_calc(tmp);
+
+            char tmp2[200]; //括弧の前の部分
+            strncpy(tmp2, input, i);
+            tmp2[i] = '\0';
+            char tmp3[200]; //括弧の後の部分
+            strncpy(tmp3, input+j, strlen(input)-j);
+            tmp3[strlen(input)-j] = '\0';
+            sprintf(input, "%s%lf%s", tmp2, res, tmp3); //括弧を計算結果に置き換える
+            i = 0;
+        }
+        i++;
+    }
+
+    return calc(input);
+}
+
 int main(){
     char input[MAX];
     scanf("%[^\n]", &input);
@@ -239,64 +276,7 @@ int main(){
     //printf("Sanitized %s\n", formula);
 
     //calculate
-    char tmp[MAX];
-    while(1){
-        //括弧の中身を抜き出す
-        i = 0;
-        int j;
-        int flg = 0; //括弧の有無のフラグ
-        while(formula[i] != '\0'){
-            if(formula[i] == BRACKET_CLOSE){
-                j = i-1;
-                while(formula[j]!=BRACKET_OPEN){
-                    j--;
-                }
-                strncpy(tmp, formula+j+1,i-j-1);
-                tmp[i-j-1] = '\0';
-                flg = 1;
-                break;
-            }
-            i++;
-        }
-
-        //括弧の中身を計算
-        if(flg){
-            char res[20];
-            int calc_res = calc(tmp);
-            int num = sprintf(res,"%d", calc_res);
-
-            //計算結果の置き換え
-            int m = 0;
-            int k = 0;
-            while(formula[k] != '\0'){
-                if(j==k){
-                    int l = 0;
-                    while(l!=num){
-                        tmp[m+l] = res[l];
-                        l++;
-                    }
-                    k = i+1;
-                    m=m+l;
-                }
-                tmp[m] = formula[k];
-                k++;
-                m++;
-            }
-            tmp[m]='\0';
-
-            //formulaの更新
-            i = 0;
-            while(tmp[i] != '\0'){
-                formula[i] = tmp[i];
-                i++;
-            }
-            formula[i] = '\0';
-        }
-        if(flg == 0) break;
-    }
-
-    //最終的な計算
-    double res = calc(formula);
+    double res = recursive_calc(formula);
     printf("%lf", res);
 
     return 0;
