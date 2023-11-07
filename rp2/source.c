@@ -9,10 +9,11 @@
 #define OPERATOR_DIVIDE '/'
 #define BRACKET_OPEN '('
 #define BRACKET_CLOSE ')'
+#define DOT '.'
 
 struct block{
-    int operand1;
-    int operand2;
+    double operand1;
+    double operand2;
     char operator;
 };
 
@@ -145,7 +146,7 @@ int main(){
     int count_in = 0;
     int count_res = 0;
     while(input[count_in] != '\0'){
-        if(input[count_in] == OPERATOR_PLUS || input[count_in] == OPERATOR_MINUS || input[count_in] == OPERATOR_MULTIPLY || input[count_in] == OPERATOR_DIVIDE || input[count_in] == BRACKET_OPEN || input[count_in] == BRACKET_CLOSE || (input[count_in] >= '0' && input[count_in] <= '9')){
+        if(input[count_in] == OPERATOR_PLUS || input[count_in] == OPERATOR_MINUS || input[count_in] == OPERATOR_MULTIPLY || input[count_in] == OPERATOR_DIVIDE || input[count_in] == BRACKET_OPEN || input[count_in] == BRACKET_CLOSE || input[count_in] == DOT|| (input[count_in] >= '0' && input[count_in] <= '9')){
             formula[count_res] = input[count_in];
             count_res++;
         }
@@ -197,6 +198,36 @@ int main(){
                 //検証: 括弧の数が合わない場合
                 printf("Invalid formula");
                 return -1;
+            }
+        }
+        if(formula[i] == DOT){
+            if(formula[i-1] < '0' || formula[i-1] > '9'){
+                //検証: .の前に数字が続かない場合
+                printf("Invalid formula");
+                return -1;
+            }
+            if(formula[i+1] < '0' || formula[i+1] > '9'){
+                //検証: .の後に数字が続かない場合
+                printf("Invalid formula");
+                return -1;
+            }
+            int j = 1;
+            while(formula[i-j] != OPERATOR_PLUS && formula[i-j] != OPERATOR_MINUS && formula[i-j] != OPERATOR_MULTIPLY && formula[i-j] != OPERATOR_DIVIDE && formula[i-j] != BRACKET_OPEN && formula[i-j] != BRACKET_CLOSE && i-j >= 0){
+                if(formula[i-j] == DOT){
+                    //検証: .が2つ以上続く場合
+                    printf("Invalid formula");
+                    return -1;
+                }
+                j++;
+            }
+            j=1;
+            while(formula[i+j] != OPERATOR_PLUS && formula[i+j] != OPERATOR_MINUS && formula[i+j] != OPERATOR_MULTIPLY && formula[i+j] != OPERATOR_DIVIDE && formula[i+j] != BRACKET_OPEN && formula[i+j] != BRACKET_CLOSE && formula[i+j] != '\0'){
+                if(formula[i+j] == DOT){
+                    //検証: .が2つ以上続く場合
+                    printf("Invalid formula");
+                    return -1;
+                }
+                j++;
             }
         }
         i++;
