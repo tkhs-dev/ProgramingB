@@ -25,6 +25,10 @@ double calc_block(struct block block){
     } else if(block.operator == OPERATOR_MULTIPLY){
         return block.operand1 * block.operand2;
     }else if(block.operator == OPERATOR_DIVIDE){
+        if(block.operand2 == 0){
+            printf("ゼロ除算エラー\n");
+            exit(1);
+        }
         return block.operand1 / block.operand2;
     }
     return 0;
