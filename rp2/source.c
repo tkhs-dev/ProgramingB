@@ -123,19 +123,19 @@ double calc(char* input){
     }
 
     //掛け算と負の数を先に処理してすべて加算に変換する
-    for(int i=count-1; i>=0; i--){
+    for(int i=0; i<count; i++){
         if(blocks[i].operator == OPERATOR_MULTIPLY || blocks[i].operator == OPERATOR_DIVIDE || blocks[i].operator == OPERATOR_POWER){
             double res = calc_block(blocks[i]);
-            blocks[i].operand1 = res;
+            blocks[i].operand1 = 0;
             blocks[i].operator = OPERATOR_PLUS;
-            blocks[i].operand2 = 0;
+            blocks[i].operand2 = res;
 
             //前後の被演算子を更新
             if(i+1 != count){
-                blocks[i+1].operand1 = 0;
+                blocks[i+1].operand1 = res;
             }
             if(i-1 >= 0){
-                blocks[i-1].operand2 = res;
+                blocks[i-1].operand2 = 0;
             }
         }
         //減算を負の数の加算に変換
