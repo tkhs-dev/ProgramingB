@@ -219,25 +219,25 @@ int main(){
         if(formula[i] == OPERATOR_PLUS || formula[i] == OPERATOR_MINUS || formula[i] == OPERATOR_MULTIPLY || formula[i] == OPERATOR_DIVIDE || formula[i] == OPERATOR_POWER){
             if((formula[i+1] < '0' || formula[i+1] > '9')&&formula[i+1] != BRACKET_OPEN){
                 //検証: 演算子の後に数字が続かない場合
-                printf("Invalid formula");
+                printf("%d番目の文字に構文エラー",i+2);
                 return -1;
             }
         }
         if(formula[i] == BRACKET_CLOSE && (formula[i+1] >= '0' && formula[i+1] <= '9')){
             //検証: )の後に数字が続く場合
-            printf("Invalid formula");
+            printf("%d番目の文字に構文エラー",i+1);
             return -1;
         }
         if(formula[i] == BRACKET_OPEN){
             int j = i+1;
             if(formula[i-1] >= '0' && formula[i-1] <= '9'){
                 //検証: 数字の後に(が続く場合
-                printf("Invalid formula");
+                printf("%d番目の文字に構文エラー",i+1);
                 return -1;
             }
             if(formula[j] == OPERATOR_PLUS || formula[j] == OPERATOR_MULTIPLY || formula[j] == OPERATOR_DIVIDE || formula[j] == OPERATOR_POWER){
-                //検証: (の後に+または*が続く場合
-                printf("Invalid formula");
+                //検証: (の後に+または*または/または^が続く場合
+                printf("%d番目の文字に構文エラー",j+1);
                 return -1;
             }
 
@@ -255,26 +255,26 @@ int main(){
             }
             if(count != 0){
                 //検証: 括弧の数が合わない場合
-                printf("Invalid formula");
+                printf("%d番目の文字に構文エラー",i+1);
                 return -1;
             }
         }
         if(formula[i] == DOT){
             if(formula[i-1] < '0' || formula[i-1] > '9'){
                 //検証: .の前に数字が続かない場合
-                printf("Invalid formula");
+                printf("%d番目の文字に構文エラー",i+1);
                 return -1;
             }
             if(formula[i+1] < '0' || formula[i+1] > '9'){
                 //検証: .の後に数字が続かない場合
-                printf("Invalid formula");
+                printf("%d番目の文字に構文エラー",i+1);
                 return -1;
             }
             int j = 1;
             while(formula[i-j] != OPERATOR_PLUS && formula[i-j] != OPERATOR_MINUS && formula[i-j] != OPERATOR_MULTIPLY && formula[i-j] != OPERATOR_DIVIDE && formula[i-j] != OPERATOR_POWER && formula[i-j] != BRACKET_OPEN && formula[i-j] != BRACKET_CLOSE && i-j >= 0){
                 if(formula[i-j] == DOT){
                     //検証: .が2つ以上続く場合
-                    printf("Invalid formula");
+                    printf("%d番目の文字に構文エラー",i-j+1);
                     return -1;
                 }
                 j++;
@@ -283,7 +283,7 @@ int main(){
             while(formula[i+j] != OPERATOR_PLUS && formula[i+j] != OPERATOR_MINUS && formula[i+j] != OPERATOR_MULTIPLY && formula[i+j] != OPERATOR_DIVIDE && formula[i+j] != OPERATOR_POWER && formula[i+j] != BRACKET_OPEN && formula[i+j] != BRACKET_CLOSE && formula[i+j] != '\0'){
                 if(formula[i+j] == DOT){
                     //検証: .が2つ以上続く場合
-                    printf("Invalid formula");
+                    printf("%d番目の文字に構文エラー",i+j+1);
                     return -1;
                 }
                 j++;
@@ -291,7 +291,6 @@ int main(){
         }
         i++;
     }
-    //printf("Sanitized %s\n", formula);
 
     //calculate
     double res = recursive_calc(formula);
