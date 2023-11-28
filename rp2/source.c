@@ -223,10 +223,30 @@ int main(){
                 return -1;
             }
         }
-        if(formula[i] == BRACKET_CLOSE && (formula[i+1] >= '0' && formula[i+1] <= '9')){
-            //検証: )の後に数字が続く場合
-            printf("%d番目の文字に構文エラー",i+1);
-            return -1;
+        if(formula[i] == BRACKET_CLOSE){
+            int j=i-1;
+            if(formula[i+1] >= '0' && formula[i+1] <= '9'){
+                //検証: )の後に数字が続く場合
+                printf("%d番目の文字に構文エラー",i+2);
+                return -1;
+            }
+            int count = -1;
+            while(j >= 0){
+                if(formula[j] == BRACKET_OPEN){
+                    count++;
+                } else if(formula[j] == BRACKET_CLOSE){
+                    count--;
+                }
+                if(count == 0){
+                    break;
+                }
+                j--;
+            }
+            if(count != 0){
+                //検証: 括弧の数が合わない場合
+                printf("%d番目の文字に構文エラー",i+1);
+                return -1;
+            }
         }
         if(formula[i] == BRACKET_OPEN){
             int j = i+1;
