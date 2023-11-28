@@ -221,7 +221,7 @@ double test(){
 
     //calculate
     double res = recursive_calc(formula);
-//    printf("%lf", res);
+    printf("%lf", res);
 
     gettimeofday(&tsEnd, NULL);
     double time = (tsEnd.tv_sec - tsStart.tv_sec) + (tsEnd.tv_usec - tsStart.tv_usec)*1.0E-6;
@@ -231,10 +231,11 @@ double test(){
 }
 
 int main(){
+    static int NUM = 1;
     double sum = 0;
-    for(int i=0; i<100000; i++){
+    for(int i=0; i<NUM; i++){
         sum = sum + test();
     }
-    printf("average: %lf\n", sum/100000);
+    printf("average: %lf\n", sum/NUM);
     return 0;
 }

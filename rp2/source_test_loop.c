@@ -164,7 +164,7 @@ double calc(char* input){
 double test(){
     char *input;
     input = "((4-7-4-6)*(4+8+(-1)+(-4)))+((((((-7)-3+3)-((-2)*(-8)+(-8)))*(7-6-1*(-8)+5*(-1)-0*8))*(-2)-5*2+3-2+3)*(0+(-5)-((((-1)*(-7))*(6+5))*(3+4-8+0))))";
-    //scanf("%[^\n]", &input);
+//    scanf("%[^\n]", &input);
 
     struct timeval tsStart, tsEnd;
     gettimeofday(&tsStart, NULL);
@@ -207,36 +207,15 @@ double test(){
 
         //括弧の中身を計算
         if(flg){
-            char res[20];
             double calc_res = calc(tmp);
-            double num = sprintf(res,"%lf", calc_res);
 
-            //計算結果の置き換え
-            int m = 0;
-            int k = 0;
-            while(formula[k] != '\0'){
-                if(j==k){
-                    int l = 0;
-                    while(l!=num){
-                        tmp[m+l] = res[l];
-                        l++;
-                    }
-                    k = i+1;
-                    m=m+l;
-                }
-                tmp[m] = formula[k];
-                k++;
-                m++;
-            }
-            tmp[m]='\0';
-
-            //formulaの更新
-            i = 0;
-            while(tmp[i] != '\0'){
-                formula[i] = tmp[i];
-                i++;
-            }
-            formula[i] = '\0';
+            char tmp2[200]; //括弧の前の部分
+            strncpy(tmp2, formula, j);
+            tmp2[j] = '\0';
+            char tmp3[200]; //括弧の後の部分
+            strncpy(tmp3, formula+i+1, strlen(formula)-i);
+            tmp3[strlen(formula)-i] = '\0';
+            sprintf(formula, "%s%lf%s", tmp2, calc_res, tmp3); //括弧を計算結果に置き換える
         }
         if(flg == 0) break;
     }
