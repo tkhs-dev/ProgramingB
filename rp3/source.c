@@ -7,9 +7,9 @@
 
 #define DATAFILE "data_sjis.csv" //data_utf.csvかdata_sjis.csvに変更
 #define PREF_COUNT 47 //都道府県数
-#define ZLEN 9 //郵便番号の最大バイト長
-#define PLEN 4 //都道府県名の最大バイト長
-#define CLEN 20 //市町村名の最大バイト長
+#define ZLEN 7 //郵便番号の最大バイト長
+#define PLEN 8 //都道府県名の最大バイト長
+#define CLEN 200 //市町村名の最大バイト長
 #define ALEN 200 //町域の最大バイト長
 #define MAX_SIZE 200000//住所録中の住所数の最大数
 
@@ -18,35 +18,14 @@ int refine_flag; //絞り込み検索の有無 0:なし，1:あり
 char query[ALEN]; //検索クエリ（郵便番号or文字列）
 
 typedef struct address{
-    char code[ZLEN + 1]; //郵便番号
+    char code[ZLEN+1]; //郵便番号
     char pref[PLEN+1]; //都道府県
-    char city[CLEN+1]; //市町村
-    char town[ALEN+1]; //町域
+    char city[CLEN+3]; //市町村
+    char town[ALEN+3]; //町域
 };
 
-typedef struct tree_elem_pref{
-    struct tree_ele_city *children;
-    unsigned char num_children;
-    char name[PLEN+1];
-};
-
-typedef struct tree_elem_city{
-    struct tree_elem_pref *parent;
-    struct tree_elem_city *children;
-    unsigned char num_children;
-    char name[CLEN+1];
-};
-
-typedef struct tree_elem_address{
-    struct tree_elem_city *parent;
-    unsigned char num_children;
-    char zip[ZLEN+1];
-    char name[ALEN+1];
-};
-
-struct address address[];
+struct address *address;
 int adress_size;
-
 
 //住所データファイルを読み取り，配列に保存
 void scan(){
@@ -59,29 +38,29 @@ void scan(){
         fprintf(stderr,"error:cannot read %s\n",DATAFILE);
         exit(-1);
     }
-    struct address *addresses = (struct address *)malloc(sizeof(struct address)*MAX_SIZE);
-    while(fscanf(fp, "%*[^,],%*[^,],%[^,],%*[^,],%*[^,],%*[^,],%[^,],%[^,],%[^,],%*s",code,pref,city,town) != EOF ){
+    address = (struct address *)malloc(sizeof(struct address)*MAX_SIZE);
+
+    while(fscanf(fp, "%*[^,],%*[^,],\"%[^,^\"]\",%*[^,],%*[^,],%*[^,],\"%[^,^\"]\",%[^,],%[^,],%*s",code,pref,city,town) != EOF ){
         /*
           上のfscanfにより，code,pref,city,townにそれぞれ郵便番号，都道府県，市町村，町域を表す
           文字列が記憶される．この箇所にコードを加筆し，
     　　　これらの情報を用いて構造体の配列に住所データを記憶させる．
          */
-        strcpy(addresses[line].code,code);
-        strcpy(addresses[line].pref,pref);
-        strcpy(addresses[line].city,city);
-        strcpy(addresses[line].town,town);
+        strcpy(address[line].code,code);
+        strcpy(address[line].pref,pref);
+        memcpy(address[line].city,city+1,strlen(city)-2);
+        memcpy(address[line].town,town+1,strlen(town)-2);
+
         line++;
     }
     printf("load %ld rows of address\n",line);
-    printf("code:%s\n",addresses[1].city);
     fclose(fp);
 
-    *address = *addresses;
     adress_size = line;
 }
 
 void preprocess(){
-
+    free(address);
     return;
 }
 
