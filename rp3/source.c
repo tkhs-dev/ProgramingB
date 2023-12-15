@@ -149,14 +149,10 @@ void preprocess(){
         town_index++;
         town_count++;
     }
-    realloc(town,(town_index)*sizeof(struct tree_elem_town));
-    realloc(city,(city_index)*sizeof(struct tree_elem_city));
-    realloc(pref,(pref_index)*sizeof(struct tree_elem_pref));
     realloc(text_pref,pref_text_cursor);
     realloc(text_city,city_text_cursor);
     realloc(text_pref,pref_text_cursor);
     free(address);
-
     return;
 }
 
