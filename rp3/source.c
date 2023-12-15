@@ -24,8 +24,39 @@ typedef struct address{
     char town[ALEN+3]; //町域
 };
 
+typedef struct elem_group{
+    unsigned int start;
+    unsigned char size;
+};
+
+typedef struct tree_elem_pref{
+    struct elem_group children;
+    unsigned int text_start;
+};
+
+typedef struct tree_elem_city{
+    struct tree_elem_pref *parent;
+    struct elem_group children;
+    unsigned int text_start;
+};
+
+typedef struct tree_elem_town{
+    struct tree_elem_city *parent;
+    unsigned int text_start;
+    char zip_code[ZLEN+1];
+};
+
 struct address *address;
-int adress_size;
+int address_size;
+int city_num;
+
+struct tree_elem_pref *pref;
+struct tree_elem_city *city;
+struct tree_elem_town *town;
+
+char *text_pref;
+char *text_city;
+char *text_town;
 
 //住所データファイルを読み取り，配列に保存
 void scan(){
@@ -40,27 +71,92 @@ void scan(){
     }
     address = (struct address *)malloc(sizeof(struct address)*MAX_SIZE);
 
+    char city_tmp[CLEN+1];
     while(fscanf(fp, "%*[^,],%*[^,],\"%[^,^\"]\",%*[^,],%*[^,],%*[^,],\"%[^,^\"]\",%[^,],%[^,],%*s",code,pref,city,town) != EOF ){
-        /*
-          上のfscanfにより，code,pref,city,townにそれぞれ郵便番号，都道府県，市町村，町域を表す
-          文字列が記憶される．この箇所にコードを加筆し，
-    　　　これらの情報を用いて構造体の配列に住所データを記憶させる．
-         */
         strcpy(address[line].code,code);
         strcpy(address[line].pref,pref);
         memcpy(address[line].city,city+1,strlen(city)-2);
         memcpy(address[line].town,town+1,strlen(town)-2);
+
+        if(strcmp(address[line].city,city_tmp) != 0){
+            strcpy(city_tmp,address[line].city);
+            city_num++;
+        }
 
         line++;
     }
     printf("load %ld rows of address\n",line);
     fclose(fp);
 
-    adress_size = line;
+    address_size = line;
 }
 
 void preprocess(){
+    unsigned char pref_index = 0;
+    unsigned int city_index = 0, town_index = 0;
+
+    unsigned int city_count = 0,town_count = 0;
+
+    pref = (struct tree_elem_pref *)malloc(sizeof(struct tree_elem_pref)*PREF_COUNT);
+    city = (struct tree_elem_city *)malloc(sizeof(struct tree_elem_city)*city_num);
+    town = (struct tree_elem_town *)malloc(sizeof(struct tree_elem_town)*address_size);
+
+    unsigned long pref_text_cursor = 1,city_text_cursor = 1,town_text_cursor = 1;
+
+    text_pref = (char *)malloc(sizeof(char)*PLEN*PREF_COUNT);
+    text_city = (char *)malloc(sizeof(char)*CLEN*city_num);
+    text_town = (char *)malloc(sizeof(char)*ALEN*address_size);
+
+    char pref_tmp[PLEN+1], city_tmp[CLEN+1];
+    for (int i = 0; i < address_size; ++i) {
+        if(strcmp(address[i].pref,pref_tmp) != 0){
+            strcpy(pref_tmp,address[i].pref);
+
+            pref[pref_index].children.start = city_index;
+            pref[pref_index].children.size = city_count;
+
+            city_count = 1;
+
+            strcpy(text_pref+pref_text_cursor,pref_tmp);
+            pref[pref_index].text_start = pref_text_cursor;
+            pref_text_cursor += strlen(pref_tmp)+1;
+            text_pref[pref_text_cursor-1] = '\0';
+            pref_index++;
+        }
+        if(strcmp(address[i].city,city_tmp) != 0){
+            strcpy(city_tmp,address[i].city);
+
+            city[city_index].parent = &pref[pref_index-1];
+            city[city_index].children.start = town_index;
+            city[city_index].children.size = town_count;
+
+            town_count = 1;
+
+            strcpy(text_city+city_text_cursor,city_tmp);
+            city[city_index].text_start = city_text_cursor;
+            city_text_cursor += strlen(city_tmp)+1;
+            text_city[city_text_cursor-1] = '\0';
+            city_index++;
+            city_count++;
+        }
+
+        town[town_index].parent = &city[city_index-1];
+        strcpy(town[town_index].zip_code,address[i].code);
+        strcpy(text_town+town_text_cursor,address[i].town);
+        town[town_index].text_start = town_text_cursor;
+        town_text_cursor += strlen(address[i].town)+1;
+        text_town[town_text_cursor-1] = '\0';
+        town_index++;
+        town_count++;
+    }
+    realloc(town,(town_index)*sizeof(struct tree_elem_town));
+    realloc(city,(city_index)*sizeof(struct tree_elem_city));
+    realloc(pref,(pref_index)*sizeof(struct tree_elem_pref));
+    realloc(text_pref,pref_text_cursor);
+    realloc(text_city,city_text_cursor);
+    realloc(text_pref,pref_text_cursor);
     free(address);
+
     return;
 }
 
@@ -157,10 +253,21 @@ void respond(){
     }
 }
 
+void dispose(){
+    printf("Disposing all allocated resources...\n");
+    free(pref);
+    free(city);
+    free(town);
+    free(text_pref);
+    free(text_city);
+    free(text_town);
+}
+
 
 int main()
 {
     init();
     respond();
+    dispose();
     return 0;
 }
