@@ -174,6 +174,19 @@ void init(){
 
 //郵便番号による住所検索．検索結果を出力．
 void code_search(){
+    if(strlen(query) != 7){
+        printf("Invalid postal code.\n");
+        return;
+    }
+    for (int i = 0; i < address_size; ++i) {
+        if(strcmp(town[i].zip_code,query) == 0){
+            char pref_name[PLEN+1],city_name[CLEN+1],town_name[ALEN+1];
+            strcpy(pref_name,text_pref+town[i].parent->parent->text_start);
+            strcpy(city_name,text_city+town[i].parent->text_start);
+            strcpy(town_name,text_town+town[i].text_start);
+            printf("%s:%s%s%s\n",town[i].zip_code,pref_name,city_name,town_name);
+        }
+    }
     return;
 }
 
