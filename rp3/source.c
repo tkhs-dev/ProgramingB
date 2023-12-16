@@ -123,9 +123,11 @@ void preprocess(){
             strcpy(pref_tmp,address[i].pref);
 
             pref[pref_index].children.start = city_index;
-            pref[pref_index].children.size = city_count;
+            if(pref_index != 0){
+                pref[pref_index-1].children.size = city_count;
+            }
 
-            city_count = 1;
+            city_count = 0;
 
             strcpy(text_pref+pref_text_cursor,pref_tmp);
             pref[pref_index].text_start = pref_text_cursor;
@@ -138,9 +140,11 @@ void preprocess(){
 
             city[city_index].parent = &pref[pref_index-1];
             city[city_index].children.start = town_index;
-            city[city_index].children.size = town_count;
+            if(city_index != 0){
+                city[city_index-1].children.size = town_count;
+            }
 
-            town_count = 1;
+            town_count = 0;
 
             strcpy(text_city+city_text_cursor,city_tmp);
             city[city_index].text_start = city_text_cursor;
@@ -159,6 +163,9 @@ void preprocess(){
         town_index++;
         town_count++;
     }
+    pref[pref_index-1].children.size = city_count;
+    city[city_index-1].children.size = town_count;
+
     realloc(text_pref,pref_text_cursor);
     realloc(text_city,city_text_cursor);
     realloc(text_pref,pref_text_cursor);
