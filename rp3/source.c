@@ -58,6 +58,16 @@ char *text_pref;
 char *text_city;
 char *text_town;
 
+void print_address(char zip[ZLEN],char pref[PLEN+1],char city[CLEN+1],char town[ALEN+1]){
+    char res[ZLEN+PLEN+CLEN+ALEN+1];
+    strcpy(res,zip);
+    strcat(res,":");
+    strcat(res,pref);
+    strcat(res,city);
+    strcat(res,town);
+    puts(res);
+}
+
 //住所データファイルを読み取り，配列に保存
 void scan(){
     FILE *fp;
