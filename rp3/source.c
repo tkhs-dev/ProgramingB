@@ -201,7 +201,7 @@ void code_search(){
             strcpy(pref_name,text_pref+town[i].parent->parent->text_start);
             strcpy(city_name,text_city+town[i].parent->text_start);
             strcpy(town_name,text_town+town[i].text_start);
-            printf("%s:%s%s%s\n",town[i].zip_code,pref_name,city_name,town_name);
+            print_address(town[i].zip_code,pref_name,city_name,town_name);
         }
     }
     return;
