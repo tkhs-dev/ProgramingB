@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<string.h>
 #include <time.h>
+#include <sys/time.h>
 
 #define ADVANCED 0 //発展課題（絞り込み検索）に対応する場合は1に変更
 
@@ -251,20 +252,31 @@ void re_input(){
 //クエリへの応答
 void respond(){
     clock_t t1,t2;
+
+    struct timeval tsStart, tsEnd;
+
     mode = 1;
     while(1){
         input();
         if(mode == 1){
             t1 = clock();
+            gettimeofday(&tsStart, NULL);
             code_search();
+            gettimeofday(&tsEnd, NULL);
             t2 = clock();
             printf("\n### %f sec for search. ###\n", diff_time(t1,t2));
+            double time = (tsEnd.tv_sec - tsStart.tv_sec) + (tsEnd.tv_usec - tsStart.tv_usec)*1.0E-6;
+            printf("\n### %lf sec for search. ###\n", time);
         }
         else if(mode == 2){
             t1 = clock();
+            gettimeofday(&tsStart, NULL);
             address_search();
+            gettimeofday(&tsEnd, NULL);
             t2 = clock();
+            double time = (tsEnd.tv_sec - tsStart.tv_sec) + (tsEnd.tv_usec - tsStart.tv_usec)*1.0E-6;
             printf("\n### %f sec for search. ###\n", diff_time(t1,t2));
+            printf("\n### %lf sec for search. ###\n", time);
             if(!ADVANCED) continue;
             while(1){
                 re_input();
