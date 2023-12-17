@@ -44,7 +44,7 @@ typedef struct tree_elem_city{
 typedef struct tree_elem_town{
     struct tree_elem_city *parent;
     unsigned int text_start;
-    char zip_code[ZLEN+1];
+    int zip_code;
 };
 
 struct address *address;
@@ -61,8 +61,8 @@ char *text_town;
 
 int addrcmp(const void * n1, const void * n2)
 {
-    int a = atoi((*(struct tree_elem_town **)n1)->zip_code);
-    int b = atoi((*(struct tree_elem_town **)n2)->zip_code);
+    int a = (*(struct tree_elem_town **)n1)->zip_code;
+    int b = (*(struct tree_elem_town **)n2)->zip_code;
     if (a > b)
     {
         return 1;
@@ -77,10 +77,13 @@ int addrcmp(const void * n1, const void * n2)
     }
 }
 
-void print_address(char zip[ZLEN],char pref[PLEN+1],char city[CLEN+1],char town[ALEN+1]){
+void print_address(unsigned short zip,char pref[PLEN+1],char city[CLEN+1],char town[ALEN+1]){
     char res[ZLEN+PLEN+CLEN+ALEN+1];
-    strcpy(res,zip);
-    strcat(res,":");
+    char *zip_str = (char *)malloc(sizeof(char)*ZLEN);
+    itoa(zip,zip_str,10);
+    if(strlen(res) == 6) strcat(res,"0");
+    strcat(res,zip_str);
+    strcat(res-1,":");
     strcat(res,pref);
     strcat(res,city);
     strcat(res,town);
@@ -174,7 +177,7 @@ void preprocess(){
         }
 
         town[town_index].parent = &city[city_index-1];
-        strcpy(town[town_index].zip_code,address[i].code);
+        town[town_index].zip_code = atoi(address[i].code);
         strcpy(text_town+town_text_cursor,address[i].town);
         town[town_index].text_start = town_text_cursor;
         town_text_cursor += strlen(address[i].town)+1;
@@ -214,8 +217,9 @@ void code_search(){
         printf("Invalid postal code.\n");
         return;
     }
+    int zip_code = atoi(query);
     for (int i = 0; i < address_size; ++i) {
-        if(strcmp(town[i].zip_code,query) == 0){
+        if(town[i].zip_code == zip_code){
             char pref_name[PLEN+1],city_name[CLEN+1],town_name[ALEN+1];
             strcpy(pref_name,text_pref+town[i].parent->parent->text_start);
             strcpy(city_name,text_city+town[i].parent->text_start);
