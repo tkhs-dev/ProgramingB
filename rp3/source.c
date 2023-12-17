@@ -10,7 +10,7 @@
 #define PREF_COUNT 47 //都道府県数
 #define ZLEN 7 //郵便番号の最大バイト長
 #define PLEN 8 //都道府県名の最大バイト長
-#define CLEN 200 //市町村名の最大バイト長
+#define CLEN 30 //市町村名の最大バイト長
 #define ALEN 200 //町域の最大バイト長
 #define MAX_SIZE 200000//住所録中の住所数の最大数
 
@@ -58,6 +58,24 @@ struct tree_elem_town *town;
 char *text_pref;
 char *text_city;
 char *text_town;
+
+int addrcmp(const void * n1, const void * n2)
+{
+    int a = atoi((*(struct tree_elem_town **)n1)->zip_code);
+    int b = atoi((*(struct tree_elem_town **)n2)->zip_code);
+    if (a > b)
+    {
+        return 1;
+    }
+    else if (a < b)
+    {
+        return -1;
+    }
+    else
+    {
+        return 0;
+    }
+}
 
 void print_address(char zip[ZLEN],char pref[PLEN+1],char city[CLEN+1],char town[ALEN+1]){
     char res[ZLEN+PLEN+CLEN+ALEN+1];
@@ -210,6 +228,75 @@ void code_search(){
 
 //文字列による住所検索．検索結果を出力．
 void address_search(){
+    struct tree_elem_pref **pref_res = (struct tree_elem_pref **)malloc(sizeof(struct tree_elem_pref *)*PREF_COUNT);
+    struct tree_elem_city **city_res = (struct tree_elem_city **)malloc(sizeof(struct tree_elem_city *)*city_num);
+    struct tree_elem_town **town_res = (struct tree_elem_town **)malloc(sizeof(struct tree_elem_town *)*address_size);
+
+    int pref_res_count = 0, city_res_count = 0, town_res_count = 0;
+    for(int i=0; i<PREF_COUNT; i++){
+        if(strstr(text_pref+pref[i].text_start,query) != NULL){
+            pref_res[pref_res_count] = &pref[i];
+            pref_res_count++;
+        }else{
+            for(int j=0; j<pref[i].children.size; j++){
+                if(strstr(text_city+city[pref[i].children.start+j].text_start,query) != NULL){
+                    city_res[city_res_count] = &city[pref[i].children.start+j];
+                    city_res_count++;
+                }else{
+                    for(int k=0; k<city[pref[i].children.start+j].children.size; k++){
+                        if(strstr(text_town+town[city[pref[i].children.start+j].children.start+k].text_start,query) != NULL){
+                            town_res[town_res_count] = &town[city[pref[i].children.start + j].children.start + k];
+                            town_res_count++;
+                        }else{
+                            char tmp[PLEN+CLEN+ALEN+1];
+                            strcpy(tmp,text_pref+pref[i].text_start);
+                            strcat(tmp,text_city+city[pref[i].children.start+j].text_start);
+                            strcat(tmp,text_town+town[city[pref[i].children.start+j].children.start+k].text_start);
+                            if(strstr(tmp,query) != NULL){
+                                town_res[town_res_count] = &town[city[pref[i].children.start + j].children.start + k];
+                                town_res_count++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    struct tree_elem_town **result = (struct tree_elem_town **)malloc(sizeof(struct tree_elem_town *)*address_size);
+    int result_count = 0;
+    for(int i=0; i<pref_res_count; i++){
+        for(int j=0; j<pref_res[i]->children.size; j++){
+            for(int k=0; k<city[pref_res[i]->children.start+j].children.size; k++){
+                result[result_count] = &town[city[pref_res[i]->children.start+j].children.start+k];
+                result_count++;
+            }
+        }
+    }
+
+    for (int i = 0; i < city_res_count; ++i) {
+        for(int k=0; k<city_res[i]->children.size; k++){
+            result[result_count] = &town[city_res[i]->children.start+k];
+            result_count++;
+        }
+    }
+
+    memcpy(result+result_count,town_res,sizeof(struct tree_elem_town *)*town_res_count);
+    result_count += town_res_count;
+
+    qsort(result, result_count, sizeof(struct tree_elem_town *), addrcmp);
+
+    for (int i = 0; i < result_count; ++i) {
+        char pref_name[PLEN+1],city_name[CLEN+1],town_name[ALEN+1];
+        strcpy(pref_name,text_pref+result[i]->parent->parent->text_start);
+        strcpy(city_name,text_city+result[i]->parent->text_start);
+        strcpy(town_name,text_town+result[i]->text_start);
+        print_address(result[i]->zip_code,pref_name,city_name,town_name);
+    }
+    free(result);
+    free(pref_res);
+    free(city_res);
+    free(town_res);
     return;
 }
 
