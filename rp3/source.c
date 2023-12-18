@@ -4,7 +4,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define ADVANCED 0 //発展課題（絞り込み検索）に対応する場合は1に変更
+#define ADVANCED 1 //発展課題（絞り込み検索）に対応する場合は1に変更
 
 #define DATAFILE "data_sjis.csv" //data_utf.csvかdata_sjis.csvに変更
 #define PREF_COUNT 47 //都道府県数
@@ -47,6 +47,15 @@ typedef struct tree_elem_town{
     int zip_code;
 };
 
+typedef struct result{
+    struct tree_elem_town **town;
+    struct tree_elem_city **city;
+    struct tree_elem_pref **pref;
+    unsigned int town_count;
+    unsigned short city_count;
+    unsigned char pref_count;
+};
+
 struct address *address;
 int address_size;
 int city_num;
@@ -58,6 +67,8 @@ struct tree_elem_town *town;
 char *text_pref;
 char *text_city;
 char *text_town;
+
+struct result result;
 
 int addrcmp(const void * n1, const void * n2)
 {
@@ -77,13 +88,16 @@ int addrcmp(const void * n1, const void * n2)
     }
 }
 
-void print_address(unsigned short zip,char pref[PLEN+1],char city[CLEN+1],char town[ALEN+1]){
+void print_address(int zip,char pref[PLEN+1],char city[CLEN+1],char town[ALEN+1]){
     char res[ZLEN+PLEN+CLEN+ALEN+1];
-    char *zip_str = (char *)malloc(sizeof(char)*ZLEN);
+    char zip_str[ZLEN+1];
     itoa(zip,zip_str,10);
-    if(strlen(res) == 6) strcat(res,"0");
+    strcpy(res,"");
+    for (int i = 0; i < 7- strlen(zip_str); ++i) {
+        strcat(res,"0");
+    }
     strcat(res,zip_str);
-    strcat(res-1,":");
+    strcat(res,":");
     strcat(res,pref);
     strcat(res,city);
     strcat(res,town);
@@ -237,27 +251,27 @@ void address_search(){
     struct tree_elem_town **town_res = (struct tree_elem_town **)malloc(sizeof(struct tree_elem_town *)*address_size);
 
     int pref_res_count = 0, city_res_count = 0, town_res_count = 0;
-    for(int i=0; i<PREF_COUNT; i++){
-        if(strstr(text_pref+pref[i].text_start,query) != NULL){
-            pref_res[pref_res_count] = &pref[i];
+    for(int i=0; i<result.pref_count; i++){
+        if(strstr(text_pref+result.pref[i]->text_start,query) != NULL){
+            pref_res[pref_res_count] = result.pref[i];
             pref_res_count++;
         }else{
-            for(int j=0; j<pref[i].children.size; j++){
-                if(strstr(text_city+city[pref[i].children.start+j].text_start,query) != NULL){
-                    city_res[city_res_count] = &city[pref[i].children.start+j];
+            for(int j=0; j<result.pref[i]->children.size; j++){
+                if(strstr(text_city+city[result.pref[i]->children.start+j].text_start,query) != NULL){
+                    city_res[city_res_count] = &city[result.pref[i]->children.start+j];
                     city_res_count++;
                 }else{
-                    for(int k=0; k<city[pref[i].children.start+j].children.size; k++){
-                        if(strstr(text_town+town[city[pref[i].children.start+j].children.start+k].text_start,query) != NULL){
-                            town_res[town_res_count] = &town[city[pref[i].children.start + j].children.start + k];
+                    for(int k=0; k<city[result.pref[i]->children.start+j].children.size; k++){
+                        if(strstr(text_town+town[city[result.pref[i]->children.start+j].children.start+k].text_start,query) != NULL){
+                            town_res[town_res_count] = &town[city[result.pref[i]->children.start + j].children.start + k];
                             town_res_count++;
                         }else{
                             char tmp[PLEN+CLEN+ALEN+1];
-                            strcpy(tmp,text_pref+pref[i].text_start);
-                            strcat(tmp,text_city+city[pref[i].children.start+j].text_start);
-                            strcat(tmp,text_town+town[city[pref[i].children.start+j].children.start+k].text_start);
+                            strcpy(tmp,text_pref+result.pref[i]->text_start);
+                            strcat(tmp,text_city+city[result.pref[i]->children.start+j].text_start);
+                            strcat(tmp,text_town+town[city[result.pref[i]->children.start+j].children.start+k].text_start);
                             if(strstr(tmp,query) != NULL){
-                                town_res[town_res_count] = &town[city[pref[i].children.start + j].children.start + k];
+                                town_res[town_res_count] = &town[city[result.pref[i]->children.start + j].children.start + k];
                                 town_res_count++;
                             }
                         }
@@ -266,6 +280,56 @@ void address_search(){
             }
         }
     }
+
+    for (int j = 0; j < result.city_count; ++j) {
+        if(strstr(text_city+result.city[j]->text_start, query) != NULL){
+            city_res[city_res_count] = result.city[j];
+            city_res_count++;
+        }else{
+            for(int k=0; k<result.city[j]->children.size; k++){
+                if(strstr(text_town+town[result.city[j]->children.start + k].text_start, query) != NULL){
+                    town_res[town_res_count] = &town[result.city[j]->children.start + k];
+                    town_res_count++;
+                }else{
+                    char tmp[PLEN+CLEN+ALEN+1];
+                    strcpy(tmp,text_pref+result.city[j]->parent->text_start);
+                    strcat(tmp,text_city+result.city[j]->text_start);
+                    strcat(tmp,text_town+town[result.city[j]->children.start + k].text_start);
+                    if(strstr(tmp,query) != NULL){
+                        town_res[town_res_count] = &town[result.city[j]->children.start + k];
+                        town_res_count++;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int k=0; k<result.town_count; k++){
+        if(strstr(text_town+result.town[k]->text_start, query) != NULL){
+            town_res[town_res_count] = result.town[k];
+            town_res_count++;
+        } else {
+            char tmp[ALEN+1];
+            strcpy(tmp,text_pref+result.town[k]->parent->parent->text_start);
+            strcat(tmp,text_city+result.town[k]->parent->text_start);
+            strcat(tmp,text_town+result.town[k]->text_start);
+            if(strstr(tmp,query) != NULL){
+                town_res[town_res_count] = result.town[k];
+                town_res_count++;
+            }
+        }
+    }
+
+    realloc(pref_res,sizeof(struct tree_elem_pref *)*pref_res_count);
+    realloc(city_res,sizeof(struct tree_elem_city *)*city_res_count);
+    realloc(town_res,sizeof(struct tree_elem_town *)*town_res_count);
+
+    result.pref = pref_res;
+    result.pref_count = pref_res_count;
+    result.city = city_res;
+    result.city_count = city_res_count;
+    result.town = town_res;
+    result.town_count = town_res_count;
 
     struct tree_elem_town **result = (struct tree_elem_town **)malloc(sizeof(struct tree_elem_town *)*address_size);
     int result_count = 0;
@@ -306,6 +370,7 @@ void address_search(){
 
 //絞り込み検索の実施
 void refinement(){
+
     return;
 }
 
@@ -336,6 +401,10 @@ void re_input(){
     if(refine_flag == 1){
         printf("String for Refinement> ");
         scanf("%s", query);
+    }else{
+        free(result.pref);
+        free(result.city);
+        free(result.town);
     }
     return;
 }
@@ -360,6 +429,11 @@ void respond(){
             printf("\n### %lf sec for search. ###\n", time);
         }
         else if(mode == 2){
+            result.pref = &pref;
+            result.pref_count = PREF_COUNT;
+            result.city_count = 0;
+            result.town_count = 0;
+
             t1 = clock();
             gettimeofday(&tsStart, NULL);
             address_search();
@@ -390,6 +464,9 @@ void dispose(){
     free(text_pref);
     free(text_city);
     free(text_town);
+    free(result.pref);
+    free(result.city);
+    free(result.town);
 }
 
 
