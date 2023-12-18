@@ -252,26 +252,26 @@ void address_search(){
 
     int pref_res_count = 0, city_res_count = 0, town_res_count = 0;
     for(int i=0; i<result.pref_count; i++){
-        if(strstr(text_pref+result.pref[i]->text_start,query) != NULL){
-            pref_res[pref_res_count] = result.pref[i];
+        if(strstr(text_pref+(*result.pref)[i].text_start,query) != NULL){
+            pref_res[pref_res_count] = &(*result.pref)[i];
             pref_res_count++;
         }else{
-            for(int j=0; j<result.pref[i]->children.size; j++){
-                if(strstr(text_city+city[result.pref[i]->children.start+j].text_start,query) != NULL){
-                    city_res[city_res_count] = &city[result.pref[i]->children.start+j];
+            for(int j=0; j<(*result.pref)[i].children.size; j++){
+                if(strstr(text_city+city[(*result.pref)[i].children.start+j].text_start,query) != NULL){
+                    city_res[city_res_count] = &city[(*result.pref)[i].children.start+j];
                     city_res_count++;
                 }else{
-                    for(int k=0; k<city[result.pref[i]->children.start+j].children.size; k++){
-                        if(strstr(text_town+town[city[result.pref[i]->children.start+j].children.start+k].text_start,query) != NULL){
-                            town_res[town_res_count] = &town[city[result.pref[i]->children.start + j].children.start + k];
+                    for(int k=0; k<city[(*result.pref)[i].children.start+j].children.size; k++){
+                        if(strstr(text_town+town[city[(*result.pref)[i].children.start+j].children.start+k].text_start,query) != NULL){
+                            town_res[town_res_count] = &town[city[(*result.pref)[i].children.start + j].children.start + k];
                             town_res_count++;
                         }else{
                             char tmp[PLEN+CLEN+ALEN+1];
-                            strcpy(tmp,text_pref+result.pref[i]->text_start);
-                            strcat(tmp,text_city+city[result.pref[i]->children.start+j].text_start);
-                            strcat(tmp,text_town+town[city[result.pref[i]->children.start+j].children.start+k].text_start);
+                            strcpy(tmp,text_pref+(*result.pref)[i].text_start);
+                            strcat(tmp,text_city+city[(*result.pref)[i].children.start+j].text_start);
+                            strcat(tmp,text_town+town[city[(*result.pref)[i].children.start+j].children.start+k].text_start);
                             if(strstr(tmp,query) != NULL){
-                                town_res[town_res_count] = &town[city[result.pref[i]->children.start + j].children.start + k];
+                                town_res[town_res_count] = &town[city[(*result.pref)[i].children.start + j].children.start + k];
                                 town_res_count++;
                             }
                         }
@@ -282,21 +282,21 @@ void address_search(){
     }
 
     for (int j = 0; j < result.city_count; ++j) {
-        if(strstr(text_city+result.city[j]->text_start, query) != NULL){
+        if(strstr(text_city+(*result.city)[j].text_start, query) != NULL){
             city_res[city_res_count] = result.city[j];
             city_res_count++;
         }else{
-            for(int k=0; k<result.city[j]->children.size; k++){
-                if(strstr(text_town+town[result.city[j]->children.start + k].text_start, query) != NULL){
-                    town_res[town_res_count] = &town[result.city[j]->children.start + k];
+            for(int k=0; k<(*result.city)[j].children.size; k++){
+                if(strstr(text_town+town[(*result.city)[j].children.start + k].text_start, query) != NULL){
+                    town_res[town_res_count] = &town[(*result.city)[j].children.start + k];
                     town_res_count++;
                 }else{
                     char tmp[PLEN+CLEN+ALEN+1];
-                    strcpy(tmp,text_pref+result.city[j]->parent->text_start);
-                    strcat(tmp,text_city+result.city[j]->text_start);
-                    strcat(tmp,text_town+town[result.city[j]->children.start + k].text_start);
+                    strcpy(tmp,text_pref+(*result.city)[j].parent->text_start);
+                    strcat(tmp,text_city+(*result.city)[j].text_start);
+                    strcat(tmp,text_town+town[(*result.city)[j].children.start + k].text_start);
                     if(strstr(tmp,query) != NULL){
-                        town_res[town_res_count] = &town[result.city[j]->children.start + k];
+                        town_res[town_res_count] = &town[(*result.city)[j].children.start + k];
                         town_res_count++;
                     }
                 }
@@ -305,14 +305,14 @@ void address_search(){
     }
 
     for(int k=0; k<result.town_count; k++){
-        if(strstr(text_town+result.town[k]->text_start, query) != NULL){
+        if(strstr(text_town+(*result.town)[k].text_start, query) != NULL){
             town_res[town_res_count] = result.town[k];
             town_res_count++;
         } else {
             char tmp[ALEN+1];
-            strcpy(tmp,text_pref+result.town[k]->parent->parent->text_start);
-            strcat(tmp,text_city+result.town[k]->parent->text_start);
-            strcat(tmp,text_town+result.town[k]->text_start);
+            strcpy(tmp,text_pref+(*result.town)[k].parent->parent->text_start);
+            strcat(tmp,text_city+(*result.town)[k].parent->text_start);
+            strcat(tmp,text_town+(*result.town)[k].text_start);
             if(strstr(tmp,query) != NULL){
                 town_res[town_res_count] = result.town[k];
                 town_res_count++;
@@ -320,9 +320,15 @@ void address_search(){
         }
     }
 
-    realloc(pref_res,sizeof(struct tree_elem_pref *)*pref_res_count);
-    realloc(city_res,sizeof(struct tree_elem_city *)*city_res_count);
-    realloc(town_res,sizeof(struct tree_elem_town *)*town_res_count);
+    if(result.pref_count != PREF_COUNT){
+        free(result.pref);
+        free(result.city);
+        free(result.town);
+    }
+
+    pref_res = realloc(pref_res,sizeof(struct tree_elem_pref *)*pref_res_count);
+    city_res = realloc(city_res,sizeof(struct tree_elem_city *)*city_res_count);
+    town_res = realloc(town_res,sizeof(struct tree_elem_town *)*town_res_count);
 
     result.pref = pref_res;
     result.pref_count = pref_res_count;
@@ -331,12 +337,12 @@ void address_search(){
     result.town = town_res;
     result.town_count = town_res_count;
 
-    struct tree_elem_town **result = (struct tree_elem_town **)malloc(sizeof(struct tree_elem_town *)*address_size);
+    struct tree_elem_town **res = (struct tree_elem_town **)malloc(sizeof(struct tree_elem_town *) * address_size);
     int result_count = 0;
     for(int i=0; i<pref_res_count; i++){
         for(int j=0; j<pref_res[i]->children.size; j++){
             for(int k=0; k<city[pref_res[i]->children.start+j].children.size; k++){
-                result[result_count] = &town[city[pref_res[i]->children.start+j].children.start+k];
+                res[result_count] = &town[city[pref_res[i]->children.start + j].children.start + k];
                 result_count++;
             }
         }
@@ -344,33 +350,30 @@ void address_search(){
 
     for (int i = 0; i < city_res_count; ++i) {
         for(int k=0; k<city_res[i]->children.size; k++){
-            result[result_count] = &town[city_res[i]->children.start+k];
+            res[result_count] = &town[city_res[i]->children.start + k];
             result_count++;
         }
     }
 
-    memcpy(result+result_count,town_res,sizeof(struct tree_elem_town *)*town_res_count);
+    memcpy(res + result_count, town_res, sizeof(struct tree_elem_town *) * town_res_count);
     result_count += town_res_count;
 
-    qsort(result, result_count, sizeof(struct tree_elem_town *), addrcmp);
+    qsort(res, result_count, sizeof(struct tree_elem_town *), addrcmp);
 
     for (int i = 0; i < result_count; ++i) {
         char pref_name[PLEN+1],city_name[CLEN+1],town_name[ALEN+1];
-        strcpy(pref_name,text_pref+result[i]->parent->parent->text_start);
-        strcpy(city_name,text_city+result[i]->parent->text_start);
-        strcpy(town_name,text_town+result[i]->text_start);
-        print_address(result[i]->zip_code,pref_name,city_name,town_name);
+        strcpy(pref_name, text_pref + res[i]->parent->parent->text_start);
+        strcpy(city_name, text_city + res[i]->parent->text_start);
+        strcpy(town_name, text_town + res[i]->text_start);
+        print_address(res[i]->zip_code, pref_name, city_name, town_name);
     }
-    free(result);
-    free(pref_res);
-    free(city_res);
-    free(town_res);
+    free(res);
     return;
 }
 
 //絞り込み検索の実施
 void refinement(){
-
+    address_search();
     return;
 }
 
@@ -464,9 +467,6 @@ void dispose(){
     free(text_pref);
     free(text_city);
     free(text_town);
-    free(result.pref);
-    free(result.city);
-    free(result.town);
 }
 
 
