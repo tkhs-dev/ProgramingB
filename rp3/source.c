@@ -248,6 +248,15 @@ void address_search(){
                     city_res[city_res_count] = &city[result.pref[i]->children.start+j];
                     city_res_count++;
                 }else{
+                    char tmp[PLEN+CLEN+ALEN+1];
+                    strcpy(tmp,text_pref+result.pref[i]->text_start);
+                    strcat(tmp,text_city+city[result.pref[i]->children.start+j].text_start);
+                    if(strstr(tmp,query) != NULL){
+                        city_res[city_res_count] = &city[result.pref[i]->children.start+j];
+                        city_res_count++;
+                        continue;
+                    }
+
                     for(int k=0; k<city[result.pref[i]->children.start+j].children.size; k++){
                         if(strstr(text_town+town[city[result.pref[i]->children.start+j].children.start+k].text_start,query) != NULL){
                             town_res[town_res_count] = &town[city[result.pref[i]->children.start + j].children.start + k];
