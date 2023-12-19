@@ -72,20 +72,7 @@ struct result result;
 
 int addrcmp(const void * n1, const void * n2)
 {
-    int a = (*(struct tree_elem_town **)n1)->zip_code;
-    int b = (*(struct tree_elem_town **)n2)->zip_code;
-    if (a > b)
-    {
-        return 1;
-    }
-    else if (a < b)
-    {
-        return -1;
-    }
-    else
-    {
-        return 0;
-    }
+    return (*(struct tree_elem_town **)n1)->zip_code - (*(struct tree_elem_town **)n2)->zip_code;
 }
 
 void print_address(int zip,char pref[PLEN+1],char city[CLEN+1],char town[ALEN+1]){
