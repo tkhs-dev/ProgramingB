@@ -202,9 +202,9 @@ void preprocess(){
     pref[pref_index-1].children.size = city_count;
     city[city_index-1].children.size = town_count;
 
-    realloc(text_pref,pref_text_cursor);
-    realloc(text_city,city_text_cursor);
-    realloc(text_pref,pref_text_cursor);
+    text_pref = realloc(text_pref,pref_text_cursor);
+    text_city = realloc(text_city,city_text_cursor);
+    text_town = realloc(text_town,town_text_cursor);
     free(address);
     return;
 }
