@@ -202,9 +202,9 @@ void preprocess(){
     pref[pref_index-1].children.size = city_count;
     city[city_index-1].children.size = town_count;
 
-    text_pref = realloc(text_pref,pref_text_cursor);
-    text_city = realloc(text_city,city_text_cursor);
-    text_town = realloc(text_town,town_text_cursor);
+    text_pref = (char *)realloc(text_pref,pref_text_cursor);
+    text_city = (char *)realloc(text_city,city_text_cursor);
+    text_town = (char *)realloc(text_town,town_text_cursor);
     free(address);
     return;
 }
@@ -327,9 +327,9 @@ void address_search(){
         free(result.town);
     }
 
-    pref_res = realloc(pref_res,sizeof(struct tree_elem_pref *)*pref_res_count);
-    city_res = realloc(city_res,sizeof(struct tree_elem_city *)*city_res_count);
-    town_res = realloc(town_res,sizeof(struct tree_elem_town *)*town_res_count);
+    pref_res = (struct tree_elem_pref *)realloc(pref_res,sizeof(struct tree_elem_pref *)*pref_res_count);
+    city_res = (struct tree_elem_pref *)realloc(city_res,sizeof(struct tree_elem_city *)*city_res_count);
+    town_res = (struct tree_elem_pref *)realloc(town_res,sizeof(struct tree_elem_town *)*town_res_count);
 
     result.pref = pref_res;
     result.pref_count = pref_res_count;
