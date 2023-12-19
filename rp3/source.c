@@ -252,26 +252,26 @@ void address_search(){
 
     int pref_res_count = 0, city_res_count = 0, town_res_count = 0;
     for(int i=0; i<result.pref_count; i++){
-        if(strstr(text_pref+(*result.pref)[i].text_start,query) != NULL){
-            pref_res[pref_res_count] = &(*result.pref)[i];
+        if(strstr(text_pref+result.pref[i]->text_start,query) != NULL){
+            pref_res[pref_res_count] = result.pref[i];
             pref_res_count++;
         }else{
-            for(int j=0; j<(*result.pref)[i].children.size; j++){
-                if(strstr(text_city+city[(*result.pref)[i].children.start+j].text_start,query) != NULL){
-                    city_res[city_res_count] = &city[(*result.pref)[i].children.start+j];
+            for(int j=0; j<result.pref[i]->children.size; j++){
+                if(strstr(text_city+city[result.pref[i]->children.start+j].text_start,query) != NULL){
+                    city_res[city_res_count] = &city[result.pref[i]->children.start+j];
                     city_res_count++;
                 }else{
-                    for(int k=0; k<city[(*result.pref)[i].children.start+j].children.size; k++){
-                        if(strstr(text_town+town[city[(*result.pref)[i].children.start+j].children.start+k].text_start,query) != NULL){
-                            town_res[town_res_count] = &town[city[(*result.pref)[i].children.start + j].children.start + k];
+                    for(int k=0; k<city[result.pref[i]->children.start+j].children.size; k++){
+                        if(strstr(text_town+town[city[result.pref[i]->children.start+j].children.start+k].text_start,query) != NULL){
+                            town_res[town_res_count] = &town[city[result.pref[i]->children.start + j].children.start + k];
                             town_res_count++;
                         }else{
                             char tmp[PLEN+CLEN+ALEN+1];
-                            strcpy(tmp,text_pref+(*result.pref)[i].text_start);
-                            strcat(tmp,text_city+city[(*result.pref)[i].children.start+j].text_start);
-                            strcat(tmp,text_town+town[city[(*result.pref)[i].children.start+j].children.start+k].text_start);
+                            strcpy(tmp,text_pref+result.pref[i]->text_start);
+                            strcat(tmp,text_city+city[result.pref[i]->children.start+j].text_start);
+                            strcat(tmp,text_town+town[city[result.pref[i]->children.start+j].children.start+k].text_start);
                             if(strstr(tmp,query) != NULL){
-                                town_res[town_res_count] = &town[city[(*result.pref)[i].children.start + j].children.start + k];
+                                town_res[town_res_count] = &town[city[result.pref[i]->children.start + j].children.start + k];
                                 town_res_count++;
                             }
                         }
@@ -281,22 +281,22 @@ void address_search(){
         }
     }
 
-    for (int j = 0; j < result.city_count; ++j) {
-        if(strstr(text_city+(*result.city)[j].text_start, query) != NULL){
+    for (int j = 0; j < result.city_count; j++) {
+        if(strstr(text_city+result.city[j]->text_start, query) != NULL){
             city_res[city_res_count] = result.city[j];
             city_res_count++;
         }else{
-            for(int k=0; k<(*result.city)[j].children.size; k++){
-                if(strstr(text_town+town[(*result.city)[j].children.start + k].text_start, query) != NULL){
-                    town_res[town_res_count] = &town[(*result.city)[j].children.start + k];
+            for(int k=0; k<result.city[j]->children.size; k++){
+                if(strstr(text_town+town[result.city[j]->children.start + k].text_start, query) != NULL){
+                    town_res[town_res_count] = &town[result.city[j]->children.start + k];
                     town_res_count++;
                 }else{
                     char tmp[PLEN+CLEN+ALEN+1];
-                    strcpy(tmp,text_pref+(*result.city)[j].parent->text_start);
-                    strcat(tmp,text_city+(*result.city)[j].text_start);
-                    strcat(tmp,text_town+town[(*result.city)[j].children.start + k].text_start);
+                    strcpy(tmp,text_pref+result.city[j]->parent->text_start);
+                    strcat(tmp,text_city+result.city[j]->text_start);
+                    strcat(tmp,text_town+town[result.city[j]->children.start + k].text_start);
                     if(strstr(tmp,query) != NULL){
-                        town_res[town_res_count] = &town[(*result.city)[j].children.start + k];
+                        town_res[town_res_count] = &town[result.city[j]->children.start + k];
                         town_res_count++;
                     }
                 }
@@ -305,14 +305,15 @@ void address_search(){
     }
 
     for(int k=0; k<result.town_count; k++){
-        if(strstr(text_town+(*result.town)[k].text_start, query) != NULL){
+        if(strstr(text_town+result.town[k]->text_start, query) != NULL){
             town_res[town_res_count] = result.town[k];
             town_res_count++;
         } else {
             char tmp[ALEN+1];
-            strcpy(tmp,text_pref+(*result.town)[k].parent->parent->text_start);
-            strcat(tmp,text_city+(*result.town)[k].parent->text_start);
-            strcat(tmp,text_town+(*result.town)[k].text_start);
+
+            strcpy(tmp,text_pref+result.town[k]->parent->parent->text_start);
+            strcat(tmp,text_city+result.town[k]->parent->text_start);
+            strcat(tmp,text_town+result.town[k]->text_start);
             if(strstr(tmp,query) != NULL){
                 town_res[town_res_count] = result.town[k];
                 town_res_count++;
@@ -432,7 +433,10 @@ void respond(){
             printf("\n### %lf sec for search. ###\n", time);
         }
         else if(mode == 2){
-            result.pref = &pref;
+            result.pref = (struct tree_elem_pref **)malloc(sizeof(struct tree_elem_pref *) * PREF_COUNT);
+            for (int i = 0; i < PREF_COUNT; ++i) {
+                result.pref[i] = &(pref[i]);
+            }
             result.pref_count = PREF_COUNT;
             result.city_count = 0;
             result.town_count = 0;
