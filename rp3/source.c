@@ -417,20 +417,14 @@ void re_input(){
 void respond(){
     clock_t t1,t2;
 
-    struct timeval tsStart, tsEnd;
-
     mode = 1;
     while(1){
         input();
         if(mode == 1){
             t1 = clock();
-            gettimeofday(&tsStart, NULL);
             code_search();
-            gettimeofday(&tsEnd, NULL);
             t2 = clock();
             printf("\n### %f sec for search. ###\n", diff_time(t1,t2));
-            double time = (tsEnd.tv_sec - tsStart.tv_sec) + (tsEnd.tv_usec - tsStart.tv_usec)*1.0E-6;
-            printf("\n### %lf sec for search. ###\n", time);
         }
         else if(mode == 2){
             result.pref = (struct tree_elem_pref **)malloc(sizeof(struct tree_elem_pref *) * PREF_COUNT);
@@ -442,17 +436,14 @@ void respond(){
             result.town_count = 0;
 
             t1 = clock();
-            gettimeofday(&tsStart, NULL);
             address_search();
-            gettimeofday(&tsEnd, NULL);
             t2 = clock();
-            double time = (tsEnd.tv_sec - tsStart.tv_sec) + (tsEnd.tv_usec - tsStart.tv_usec)*1.0E-6;
+
             printf("\n### %f sec for search. ###\n", diff_time(t1,t2));
-            printf("\n### %lf sec for search. ###\n", time);
             if(!ADVANCED) continue;
             while(1){
                 re_input();
-                if(refine_flag == 0) break;
+                if(refine_flag != 1) break;
                 t1 = clock();
                 refinement();
                 t2 = clock();
@@ -464,7 +455,6 @@ void respond(){
 }
 
 void dispose(){
-    printf("Disposing all allocated resources...\n");
     free(pref);
     free(city);
     free(town);
