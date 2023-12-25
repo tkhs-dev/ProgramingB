@@ -27,7 +27,7 @@ typedef struct address{
 
 typedef struct elem_group{
     unsigned int start;
-    unsigned char size;
+    unsigned short size;
 };
 
 typedef struct tree_elem_pref{
