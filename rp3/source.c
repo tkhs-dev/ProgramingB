@@ -27,7 +27,7 @@ typedef struct address{
 
 typedef struct elem_group{
     unsigned int start;
-    unsigned char size;
+    unsigned short size;
 };
 
 typedef struct tree_elem_pref{
@@ -78,7 +78,7 @@ int addrcmp(const void * n1, const void * n2)
 void print_address(int zip,char pref[PLEN+1],char city[CLEN+1],char town[ALEN+1]){
     char res[ZLEN+PLEN+CLEN+ALEN+1];
     char zip_str[ZLEN+1];
-    itoa(zip,zip_str,10);
+    sprintf(zip_str,"%d",zip);
     strcpy(res,"");
     for (int i = 0; i < 7- strlen(zip_str); ++i) {
         strcat(res,"0");
