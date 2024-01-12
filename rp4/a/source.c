@@ -4,12 +4,6 @@
 #include<time.h>
 #include "MT.h"
 
-typedef struct{
-    long id;
-    long mother;
-    long gen;
-} Mitochondria;
-
 //大域変数
 long num, maxGen;
 
@@ -41,7 +35,7 @@ void print_result(long ordinal, long eveGen, long eveId, long foundGen){
 }
 
 void simulate(long maxGen, long num){
-    Mitochondria *mito = (Mitochondria *)malloc(sizeof(Mitochondria) * num * (maxGen+1));
+    long *mito = (long *)malloc(sizeof(long) * num * (maxGen+1));
     long eveGen=0;
     long times=0;
     long *ids = malloc(sizeof(long) * num);
@@ -52,15 +46,11 @@ void simulate(long maxGen, long num){
 
     for (long i = 1; i < maxGen; ++i) {
         for (long j = 0; j < num; ++j) {
-            mito[i * num + j].id = j;
-            mito[i * num + j].mother = nextMother();
-            mito[i * num + j].gen = i;
+            mito[i * num + j] = nextMother();
         }
     }
     for (long j = 0; j < num; ++j) {
-        mito[maxGen * num + j].id = j;
-        mito[maxGen * num + j].mother = 0;
-        mito[maxGen * num + j].gen = maxGen;
+        mito[maxGen * num + j] = 0;
     }
     for (long i = 1; i < maxGen; ++i) {
         for (long i = 0; i < num; ++i) {
@@ -69,7 +59,7 @@ void simulate(long maxGen, long num){
         for (long j = i; j <= maxGen; ++j) {
             int flg = 1;
             for (long k = 0; k < num; ++k) {;
-                tmp_ids[k] = ids[mito[j * num + k].mother];
+                tmp_ids[k] = ids[mito[j * num + k]];
                 if(k != 0 && tmp_ids[k - 1] != tmp_ids[k]){
                     flg = 0;
                 }
