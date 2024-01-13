@@ -4,6 +4,11 @@
 #include<time.h>
 #include "MT.h"
 
+typedef struct{
+    long eveId; //ID
+    long foundGen; //発見された世代
+} eve_gen;
+
 //大域変数
 long num, maxGen;
 
@@ -34,6 +39,34 @@ void print_result(long ordinal, long eveGen, long eveId, long foundGen){
     puts(res);
 }
 
+eve_gen get_eve_gen(long *mito, long *ids, long *tmp_ids, long start_gen, long num, long maxGen){
+    eve_gen result;
+    result.eveId = 0;
+    result.foundGen = 0;
+
+    for (long k = 0; k < num; ++k) {
+        ids[k] = k;
+    }
+    for (long j = start_gen; j <= maxGen; ++j) {
+        int flg = 1;
+        for (long k = 0; k < num; ++k) {;
+            tmp_ids[k] = ids[mito[j * num + k]];
+            if(k != 0 && tmp_ids[k - 1] != tmp_ids[k]){
+                flg = 0;
+            }
+        }
+        if(flg){
+            result.foundGen = j;
+            result.eveId = tmp_ids[0];
+            return result;
+        }else{
+            memcpy(ids, tmp_ids, sizeof(long) * num);
+        }
+    }
+
+    return result;
+}
+
 void simulate(long maxGen, long num){
     long *mito = (long *)malloc(sizeof(long) * num * (maxGen+1));
     long eveGen=0;
@@ -48,40 +81,23 @@ void simulate(long maxGen, long num){
         for (long j = 0; j < num; ++j) {
             mito[i * num + j] = nextMother();
         }
-    }
+    }       
     for (long j = 0; j < num; ++j) {
         mito[maxGen * num + j] = 0;
     }
+
     for (long i = 1; i < maxGen; ++i) {
-        for (long i = 0; i < num; ++i) {
-            ids[i] = i;
-        }
-        for (long j = i; j <= maxGen; ++j) {
-            int flg = 1;
-            for (long k = 0; k < num; ++k) {;
-                tmp_ids[k] = ids[mito[j * num + k]];
-                if(k != 0 && tmp_ids[k - 1] != tmp_ids[k]){
-                    flg = 0;
+        eve_gen result = get_eve_gen(mito, ids, tmp_ids, i, num, maxGen);
+        if(result.foundGen != 0) {
+            if (eveGen < result.foundGen) {
+                if (times != 0) {
+                    print_result(times, lastGen - 1, lastId, eveGen);
                 }
+                eveGen = result.foundGen;
+                times++;
             }
-            if(flg){
-                if(eveGen < j){
-                    if(times != 0){
-                        print_result(times, lastGen-1,lastId, eveGen);
-                    }
-                    eveGen = j;
-                    times++;
-                }else{
-                    for (long k = 0; k < num; ++k) {
-                        ids[k] = k;
-                    }
-                }
-                lastGen = i;
-                lastId = tmp_ids[0];
-                break;
-            }else{
-                memcpy(ids, tmp_ids, sizeof(long) * num);
-            }
+            lastGen = i;
+            lastId = result.eveId;
         }
     }
     free(mito);
@@ -91,9 +107,7 @@ void simulate(long maxGen, long num){
 }
 
 int main(int argc, char **argv){
-    long times=0;
     clock_t t1,t2;
-    char *th;
 
     /*******初期設定*******/
     if(argc != 4){
