@@ -50,10 +50,10 @@ eve_gen get_eve_gen(long *mito, eve_gen* cache, long *ids, long *tmp_ids, long s
         return result;
     }
 
-//    if(cache[start_gen].eveGen != 0){
-////        printf("cache hit %ld\n",start_gen);
-//        return cache[start_gen];
-//    }
+    if(cache[start_gen].eveGen != 0){
+//        printf("cache hit %ld\n",start_gen);
+        return cache[start_gen];
+    }
 
     for (long k = 0; k < num; ++k) {
         ids[k] = k;
@@ -75,7 +75,7 @@ eve_gen get_eve_gen(long *mito, eve_gen* cache, long *ids, long *tmp_ids, long s
             memcpy(ids, tmp_ids, sizeof(long) * num);
         }
     }
-//    cache[start_gen] = result;
+    cache[start_gen] = result;
     return result;
 }
 
@@ -107,11 +107,11 @@ void simulate(long maxGen, long num){
         if(gen > maxGen){
             gen = last_result.eveGen+1;
         }
-        printf("finding %ld\n",gen);
+//        printf("finding %ld\n",gen);
         eve_gen res = get_eve_gen(mito, cache, ids, tmp_ids, gen, num, maxGen);
         if(res.foundGen != last_result.foundGen){
             for (int j = 0; j < step; ++j) {
-                printf(">>>finding %ld\n",last_result.eveGen + j);
+//                printf(">>>finding %ld\n",last_result.eveGen + j);
                 res =  get_eve_gen(mito, cache, ids, tmp_ids, last_result.eveGen + j, num, maxGen);
                 if(res.foundGen != 0){
                     if(res.foundGen > eveGen){
@@ -120,13 +120,12 @@ void simulate(long maxGen, long num){
                         }
                         eveGen = res.foundGen;
                         times++;
+                        break;
                     }
                     lastGen = res.eveGen;
                     lastId = res.eveId;
                 }
             }
-        }else{
-            step = num;
         }
         last_result = res;
     }
