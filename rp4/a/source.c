@@ -5,6 +5,7 @@
 #include "MT.h"
 
 typedef struct{
+    long eveGen; //世代
     long eveId; //ID
     long foundGen; //発見された世代
 } eve_gen;
@@ -39,10 +40,20 @@ void print_result(long ordinal, long eveGen, long eveId, long foundGen){
     puts(res);
 }
 
-eve_gen get_eve_gen(long *mito, long *ids, long *tmp_ids, long start_gen, long num, long maxGen){
+eve_gen get_eve_gen(long *mito, eve_gen* cache, long *ids, long *tmp_ids, long start_gen, long num, long maxGen){
     eve_gen result;
+    result.eveGen = start_gen;
     result.eveId = 0;
     result.foundGen = 0;
+
+    if(start_gen >= maxGen){
+        return result;
+    }
+
+//    if(cache[start_gen].eveGen != 0){
+////        printf("cache hit %ld\n",start_gen);
+//        return cache[start_gen];
+//    }
 
     for (long k = 0; k < num; ++k) {
         ids[k] = k;
@@ -58,23 +69,25 @@ eve_gen get_eve_gen(long *mito, long *ids, long *tmp_ids, long start_gen, long n
         if(flg){
             result.foundGen = j;
             result.eveId = tmp_ids[0];
+            cache[start_gen] = result;
             return result;
         }else{
             memcpy(ids, tmp_ids, sizeof(long) * num);
         }
     }
-
+//    cache[start_gen] = result;
     return result;
 }
 
 void simulate(long maxGen, long num){
     long *mito = (long *)malloc(sizeof(long) * num * (maxGen+1));
+    eve_gen* cache = (eve_gen *)calloc(maxGen, sizeof(eve_gen));
     long eveGen=0;
     long times=0;
     long *ids = malloc(sizeof(long) * num);
     long *tmp_ids = malloc(sizeof(long) * num);
 
-    long lastGen = 0;
+    long lastGen = 1;
     long lastId = 0;
 
     for (long i = 1; i < maxGen; ++i) {
@@ -85,24 +98,42 @@ void simulate(long maxGen, long num){
     for (long j = 0; j < num; ++j) {
         mito[maxGen * num + j] = 0;
     }
-
-    for (long i = 1; i < maxGen; ++i) {
-        eve_gen result = get_eve_gen(mito, ids, tmp_ids, i, num, maxGen);
-        if(result.foundGen != 0) {
-            if (eveGen < result.foundGen) {
-                if (times != 0) {
-                    print_result(times, lastGen - 1, lastId, eveGen);
-                }
-                eveGen = result.foundGen;
-                times++;
-            }
-            lastGen = i;
-            lastId = result.eveId;
+    eve_gen last_result = get_eve_gen(mito, cache, ids, tmp_ids, 1, num, maxGen);
+    eve_gen* stack = malloc(sizeof(eve_gen) * num);
+    long stack_pointer = 0;
+    long step = num;
+    while(last_result.foundGen != 0){
+        long gen = last_result.eveGen + step;
+        if(gen > maxGen){
+            gen = last_result.eveGen+1;
         }
+        printf("finding %ld\n",gen);
+        eve_gen res = get_eve_gen(mito, cache, ids, tmp_ids, gen, num, maxGen);
+        if(res.foundGen != last_result.foundGen){
+            for (int j = 0; j < step; ++j) {
+                printf(">>>finding %ld\n",last_result.eveGen + j);
+                res =  get_eve_gen(mito, cache, ids, tmp_ids, last_result.eveGen + j, num, maxGen);
+                if(res.foundGen != 0){
+                    if(res.foundGen > eveGen){
+                        if(times != 0){
+                            print_result(times, lastGen - 1, lastId, eveGen);
+                        }
+                        eveGen = res.foundGen;
+                        times++;
+                    }
+                    lastGen = res.eveGen;
+                    lastId = res.eveId;
+                }
+            }
+        }else{
+            step = num;
+        }
+        last_result = res;
     }
     free(mito);
     free(ids);
     free(tmp_ids);
+    free(stack);
     printf("Eve occurrence rate is %f\n",(double) (times-1)/maxGen);
 }
 
