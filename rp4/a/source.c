@@ -10,6 +10,12 @@ typedef struct{
     long foundGen; //発見された世代
 } eve_gen;
 
+typedef struct{
+    long gen; //世代
+    long id; //ID
+    long parent_id; //親のID
+} individual;
+
 //大域変数
 long num, maxGen;
 
@@ -40,7 +46,7 @@ void print_result(long ordinal, long eveGen, long eveId, long foundGen){
     puts(res);
 }
 
-eve_gen get_eve_gen(long *mito, eve_gen* cache, long *ids, long *tmp_ids, long start_gen, long num, long maxGen){
+eve_gen get_eve_gen(individual *individuals, eve_gen* cache, long *ids, long *tmp_ids, long start_gen, long num, long maxGen){
     eve_gen result;
     result.eveGen = start_gen;
     result.eveId = 0;
@@ -61,7 +67,7 @@ eve_gen get_eve_gen(long *mito, eve_gen* cache, long *ids, long *tmp_ids, long s
     for (long j = start_gen; j <= maxGen; ++j) {
         int flg = 1;
         for (long k = 0; k < num; ++k) {;
-            tmp_ids[k] = ids[mito[j * num + k]];
+            tmp_ids[k] = ids[individuals[j * num + k].parent_id];
             if(k != 0 && tmp_ids[k - 1] != tmp_ids[k]){
                 flg = 0;
             }
@@ -80,7 +86,8 @@ eve_gen get_eve_gen(long *mito, eve_gen* cache, long *ids, long *tmp_ids, long s
 }
 
 void simulate(long maxGen, long num){
-    long *mito = (long *)malloc(sizeof(long) * num * (maxGen+1));
+    individual *individuals = malloc(sizeof(individual) * num * (maxGen+1));
+
     eve_gen* cache = (eve_gen *)calloc(maxGen, sizeof(eve_gen));
     long eveGen=0;
     long times=0;
@@ -92,13 +99,17 @@ void simulate(long maxGen, long num){
 
     for (long i = 1; i < maxGen; ++i) {
         for (long j = 0; j < num; ++j) {
-            mito[i * num + j] = nextMother();
+            individuals[i * num + j].parent_id = nextMother();
+            individuals[i * num + j].gen = i;
+            individuals[i * num + j].id = j;
         }
-    }       
-    for (long j = 0; j < num; ++j) {
-        mito[maxGen * num + j] = 0;
     }
-    eve_gen last_result = get_eve_gen(mito, cache, ids, tmp_ids, 1, num, maxGen);
+    for (long j = 0; j < num; ++j) {
+        individuals[maxGen * num + j].parent_id = 0;
+        individuals[maxGen * num + j].gen = maxGen;
+        individuals[maxGen * num + j].id = j;
+    }
+    eve_gen last_result = get_eve_gen(individuals, cache, ids, tmp_ids, 1, num, maxGen);
     eve_gen* stack = malloc(sizeof(eve_gen) * num);
     long stack_pointer = 0;
     long step = num;
@@ -108,11 +119,11 @@ void simulate(long maxGen, long num){
             gen = last_result.eveGen+1;
         }
 //        printf("finding %ld\n",gen);
-        eve_gen res = get_eve_gen(mito, cache, ids, tmp_ids, gen, num, maxGen);
+        eve_gen res = get_eve_gen(individuals, cache, ids, tmp_ids, gen, num, maxGen);
         if(res.foundGen != last_result.foundGen){
             for (int j = 0; j < step; ++j) {
 //                printf(">>>finding %ld\n",last_result.eveGen + j);
-                res =  get_eve_gen(mito, cache, ids, tmp_ids, last_result.eveGen + j, num, maxGen);
+                res =  get_eve_gen(individuals, cache, ids, tmp_ids, last_result.eveGen + j, num, maxGen);
                 if(res.foundGen != 0){
                     if(res.foundGen > eveGen){
                         if(times != 0){
@@ -129,7 +140,7 @@ void simulate(long maxGen, long num){
         }
         last_result = res;
     }
-    free(mito);
+    free(individuals);
     free(ids);
     free(tmp_ids);
     free(stack);
