@@ -89,10 +89,10 @@ parent_and_child_gen find_eve(individual *individuals, long *parents, long *tmp_
     long last_bit = 0;
     for (long i = 0; i < start_gen; ++i) {
         long ctr = 0;
-        for (int j = 0; j < num; ++j) {
+        for (long j = 0; j < num; ++j) {
             tmp_parents[j] = 0;
         }
-        for (int j = 0; j < num; ++j) {
+        for (long j = 0; j < num; ++j) {
             if(parents[j]){
                 ctr++;
                 last_bit = j;
@@ -127,17 +127,14 @@ void simulate(long maxGen, long num){
 
     parent_and_child_gen res;
     res.p_gen = 1;
+    res.c_gen = 1;
 
-    while(1){
+    while(res.c_gen != 0){
         res = find_nearest_child_gen(individuals, ids, tmp_ids, res.p_gen, num, maxGen);
-        if(res.c_gen != 0){
-            res = find_eve(individuals, ids, tmp_ids, res.c_gen, num, maxGen);
-            times++;
-            print_result(times, res.p_gen, res.p_id, res.c_gen);
-            res.p_gen++;
-        }else{
-            break;
-        }
+        res = find_eve(individuals, ids, tmp_ids, res.c_gen, num, maxGen);
+        times++;
+        print_result(times, res.p_gen, res.p_id, res.c_gen);
+        res.p_gen++;
     }
     free(individuals);
     free(ids);
