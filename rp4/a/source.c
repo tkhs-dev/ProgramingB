@@ -4,7 +4,7 @@
 #include<time.h>
 #include "MT.h"
 
-#define MEMORY_ALLOCATION_DEFAULT 1000000000 //1MB
+#define DEFAULT_HEAP_SIZE 1000000000 //1GB
 
 typedef struct{
     long p_gen; //親の世代
@@ -21,7 +21,7 @@ typedef struct{
     long end_gen;
 } loaded_gen;
 
-long MEMORY_ALLOCATION = MEMORY_ALLOCATION_DEFAULT;
+long HEAP_SIZE = DEFAULT_HEAP_SIZE;
 long num;
 
 /*
@@ -66,7 +66,7 @@ parent_and_child_gen find_nearest_child_gen(individual *individuals,loaded_gen *
     for (long j = start_gen+1; j < maxGen; ++j) {
         //memory allocation
         if(j >= loaded->end_gen){
-            if(j - start_gen >= MEMORY_ALLOCATION / (sizeof(individual) * num)){
+            if(j - start_gen >= HEAP_SIZE / (sizeof(individual) * num)){
                 printf("Heap size is not enough!! \n");
                 printf("Set a larger heap size with the 4th command line argument or lower the value of num.\n");
                 printf("arg1 = num, arg2 = max_gen, arg3 = seed, [arg4 = max heap size(byte)]\n");
@@ -74,10 +74,10 @@ parent_and_child_gen find_nearest_child_gen(individual *individuals,loaded_gen *
             }
 
             memmove(individuals, individuals + num * (start_gen-loaded->start_gen), sizeof(individual) * num * (loaded->end_gen-start_gen+1));
-            if(MEMORY_ALLOCATION > sizeof(individual) * num * (maxGen - start_gen)){
+            if(HEAP_SIZE > sizeof(individual) * num * (maxGen - start_gen)){
                 loaded->end_gen = maxGen-1;
             }else{
-                loaded->end_gen = start_gen + MEMORY_ALLOCATION / (sizeof(individual) * num)-1;
+                loaded->end_gen = start_gen + HEAP_SIZE / (sizeof(individual) * num) - 1;
             }
             loaded->start_gen = start_gen;
 
@@ -148,10 +148,10 @@ void simulate(long maxGen, long num){
     loaded.start_gen = 0;
     long load_num;
 
-    if(MEMORY_ALLOCATION > sizeof(individual) * num * maxGen){
+    if(HEAP_SIZE > sizeof(individual) * num * maxGen){
         load_num = maxGen-1;
     }else{
-        load_num = MEMORY_ALLOCATION / (sizeof(individual) * num);
+        load_num = HEAP_SIZE / (sizeof(individual) * num);
     }
     individuals = malloc(sizeof(individual) * num * load_num);
     for (long i = 1; i < load_num; ++i) {
@@ -195,7 +195,7 @@ int main(int argc, char **argv){
     long maxGen = atol(argv[2]); //世代数の上限G．大域変数．
     int seed = atoi(argv[3]);
     if(argc == 5){
-        MEMORY_ALLOCATION = atol(argv[4]);
+        HEAP_SIZE = atol(argv[4]);
     }
     init_genrand(seed);//乱数生成の初期化．【編集厳禁!】
     t1 = clock();
