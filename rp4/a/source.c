@@ -4,6 +4,8 @@
 #include<time.h>
 #include "MT.h"
 
+#define MEMORY_ALLOCATION 2900 //1MB
+
 typedef struct{
     long p_gen; //親の世代
     long p_id; //親のID
@@ -15,6 +17,11 @@ typedef struct{
     long id; //ID
     long p_id; //親のID
 } individual;
+
+typedef struct{
+    long start_gen;
+    long end_gen;
+} loaded_gen;
 
 //大域変数
 long num, maxGen;
@@ -46,7 +53,7 @@ void print_result(long ordinal, long eveGen, long eveId, long foundGen){
     puts(res);
 }
 
-parent_and_child_gen find_nearest_child_gen(individual *individuals, long *ids, long *tmp_ids, long start_gen, long num, long maxGen){
+parent_and_child_gen find_nearest_child_gen(individual *individuals,loaded_gen *loaded, long *ids, long *tmp_ids, long start_gen, long num, long maxGen){
     parent_and_child_gen result;
     result.p_gen = start_gen;
     result.p_id = 0;
@@ -60,9 +67,29 @@ parent_and_child_gen find_nearest_child_gen(individual *individuals, long *ids, 
         ids[k] = k;
     }
     for (long j = start_gen+1; j < maxGen; ++j) {
+        //memory allocation
+        if(j >= loaded->end_gen){
+            loaded->start_gen = start_gen;
+            if(MEMORY_ALLOCATION > sizeof(individual) * num * (maxGen - start_gen)){
+                loaded->end_gen = maxGen;
+            }else{
+                loaded->end_gen = start_gen + MEMORY_ALLOCATION / (sizeof(individual) * num);
+            }
+            memmove(individuals, individuals + num * (j-loaded->start_gen+4), sizeof(individual) * num * (j-loaded->start_gen+1));
+
+            for (long i = j-loaded->start_gen; i < loaded->end_gen - loaded->start_gen; ++i) {
+                for (long k = 0; k < num; ++k) {
+                    individuals[i * num + k].p_id = nextMother();
+                    individuals[i * num + k].gen = i;
+                    individuals[i * num + k].id = k;
+                }
+            }
+        }
+
+
         int flg = 1;
         for (long k = 0; k < num; ++k) {
-            tmp_ids[k] = ids[individuals[j * num + k].p_id];
+            tmp_ids[k] = ids[individuals[(j-loaded->start_gen) * num + k].p_id];
             if(k != 0 && tmp_ids[k - 1] != tmp_ids[k]){
                 flg = 0;
             }
@@ -77,7 +104,7 @@ parent_and_child_gen find_nearest_child_gen(individual *individuals, long *ids, 
     return result;
 }
 
-parent_and_child_gen find_eve(individual *individuals, long *parents, long *tmp_parents,long start_gen, long num, long max_gen){
+parent_and_child_gen find_eve(individual *individuals, loaded_gen *loaded, long *parents, long *tmp_parents,long start_gen, long num, long max_gen){
     parent_and_child_gen result;
     result.p_gen = start_gen;
     result.p_id = 0;
@@ -96,7 +123,7 @@ parent_and_child_gen find_eve(individual *individuals, long *parents, long *tmp_
             if(parents[j]){
                 ctr++;
                 last_bit = j;
-                tmp_parents[individuals[(start_gen-i) * num + j].p_id] = 1;
+                tmp_parents[individuals[(start_gen-i-loaded->start_gen) * num + j].p_id] = 1;
             }
         }
         if(ctr == 1){
@@ -111,27 +138,37 @@ parent_and_child_gen find_eve(individual *individuals, long *parents, long *tmp_
 }
 
 void simulate(long maxGen, long num){
-    individual *individuals = malloc(sizeof(individual) * num * (maxGen+1));
-
+    individual *individuals;
     long times=0;
     long *ids = malloc(sizeof(long) * num);
     long *tmp_ids = malloc(sizeof(long) * num);
 
-    for (long i = 1; i < maxGen; ++i) {
+    loaded_gen loaded;
+    loaded.start_gen = 0;
+    long load_num;
+
+    if(MEMORY_ALLOCATION > sizeof(individual) * num * maxGen){
+        load_num = maxGen;
+    }else{
+        load_num = MEMORY_ALLOCATION / (sizeof(individual) * num);
+    }
+    individuals = malloc(sizeof(individual) * num * load_num);
+    for (long i = 1; i < load_num; ++i) {
         for (long j = 0; j < num; ++j) {
             individuals[i * num + j].p_id = nextMother();
             individuals[i * num + j].gen = i;
             individuals[i * num + j].id = j;
         }
     }
+    loaded.end_gen = load_num;
 
     parent_and_child_gen res;
     res.p_gen = 1;
     res.c_gen = 1;
 
     while(res.c_gen != 0){
-        res = find_nearest_child_gen(individuals, ids, tmp_ids, res.p_gen, num, maxGen);
-        res = find_eve(individuals, ids, tmp_ids, res.c_gen, num, maxGen);
+        res = find_nearest_child_gen(individuals, &loaded, ids, tmp_ids, res.p_gen, num, maxGen);
+        res = find_eve(individuals, &loaded, ids, tmp_ids, res.c_gen, num, maxGen);
         times++;
         print_result(times, res.p_gen, res.p_id, res.c_gen);
         res.p_gen++;
