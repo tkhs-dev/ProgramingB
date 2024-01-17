@@ -64,7 +64,6 @@ parent_and_child_gen find_nearest_child_gen(individual *individuals,loaded_gen *
         ids[k] = k;
     }
     for (long j = start_gen+1; j < maxGen; ++j) {
-        //memory allocation
         if(j >= loaded->end_gen){
             if(j - start_gen >= HEAP_SIZE / (sizeof(individual) * num)){
                 printf("Heap size is not enough!! \n");
@@ -191,8 +190,8 @@ int main(int argc, char **argv){
         printf("arg1 = num, arg2 = max_gen, arg3 = seed, [arg4 = max heap size(byte)]\n");
         exit(-1);
     }
-    num = atol(argv[1]); //1世代の人口N．大域変数．
-    long maxGen = atol(argv[2]); //世代数の上限G．大域変数．
+    num = atol(argv[1]);
+    long maxGen = atol(argv[2]);
     int seed = atoi(argv[3]);
     if(argc == 5){
         HEAP_SIZE = atol(argv[4]);
