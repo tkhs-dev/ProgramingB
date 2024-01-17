@@ -4,7 +4,7 @@
 #include<time.h>
 #include "MT.h"
 
-#define MEMORY_ALLOCATION 2900 //1MB
+#define MEMORY_ALLOCATION 3000000 //1MB
 
 typedef struct{
     long p_gen; //親の世代
@@ -69,15 +69,20 @@ parent_and_child_gen find_nearest_child_gen(individual *individuals,loaded_gen *
     for (long j = start_gen+1; j < maxGen; ++j) {
         //memory allocation
         if(j >= loaded->end_gen){
-            loaded->start_gen = start_gen;
-            if(MEMORY_ALLOCATION > sizeof(individual) * num * (maxGen - start_gen)){
-                loaded->end_gen = maxGen;
-            }else{
-                loaded->end_gen = start_gen + MEMORY_ALLOCATION / (sizeof(individual) * num);
+            if(j - start_gen >= MEMORY_ALLOCATION / (sizeof(individual) * num)){
+                printf("Heap size is not enough!! \n");
+                exit(-1);
             }
-            memmove(individuals, individuals + num * (j-loaded->start_gen+4), sizeof(individual) * num * (j-loaded->start_gen+1));
 
-            for (long i = j-loaded->start_gen; i < loaded->end_gen - loaded->start_gen; ++i) {
+            memmove(individuals, individuals + num * (start_gen-loaded->start_gen), sizeof(individual) * num * (loaded->end_gen-start_gen+1));
+            if(MEMORY_ALLOCATION > sizeof(individual) * num * (maxGen - start_gen)){
+                loaded->end_gen = maxGen-1;
+            }else{
+                loaded->end_gen = start_gen + MEMORY_ALLOCATION / (sizeof(individual) * num)-1;
+            }
+            loaded->start_gen = start_gen;
+
+            for (long i = j-loaded->start_gen+1; i <= loaded->end_gen - loaded->start_gen; ++i) {
                 for (long k = 0; k < num; ++k) {
                     individuals[i * num + k].p_id = nextMother();
                     individuals[i * num + k].gen = i;
@@ -85,7 +90,6 @@ parent_and_child_gen find_nearest_child_gen(individual *individuals,loaded_gen *
                 }
             }
         }
-
 
         int flg = 1;
         for (long k = 0; k < num; ++k) {
@@ -148,7 +152,7 @@ void simulate(long maxGen, long num){
     long load_num;
 
     if(MEMORY_ALLOCATION > sizeof(individual) * num * maxGen){
-        load_num = maxGen;
+        load_num = maxGen-1;
     }else{
         load_num = MEMORY_ALLOCATION / (sizeof(individual) * num);
     }
@@ -160,18 +164,22 @@ void simulate(long maxGen, long num){
             individuals[i * num + j].id = j;
         }
     }
-    loaded.end_gen = load_num;
+    loaded.end_gen = load_num-1;
 
     parent_and_child_gen res;
     res.p_gen = 1;
     res.c_gen = 1;
 
-    while(res.c_gen != 0){
+    while(1){
         res = find_nearest_child_gen(individuals, &loaded, ids, tmp_ids, res.p_gen, num, maxGen);
-        res = find_eve(individuals, &loaded, ids, tmp_ids, res.c_gen, num, maxGen);
-        times++;
-        print_result(times, res.p_gen, res.p_id, res.c_gen);
-        res.p_gen++;
+        if(res.c_gen != 0){
+            res = find_eve(individuals, &loaded,ids, tmp_ids, res.c_gen, num, maxGen);
+            times++;
+            print_result(times, res.p_gen, res.p_id, res.c_gen);
+            res.p_gen++;
+        }else{
+            break;
+        }
     }
     free(individuals);
     free(ids);
