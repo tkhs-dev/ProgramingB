@@ -10,7 +10,7 @@
 #define C_MAX 30 //コマンド用バッファ長．6で十分だが入力ミスに備えて30としておく．
 #define K_MAX 50 //キー用バッファ長．
 #define V_MAX 200 //バリュー用バッファ長．
-#define TABLE_SIZE 1000000 //テーブルサイズ．
+#define TABLE_SIZE 1024 //テーブルサイズ．
 
 //構造体
 typedef struct Item item;
@@ -38,9 +38,9 @@ long hash(char *key, long size){
     long h = 0;
     long len = strlen(key);
     for (int i = 0; i < len; ++i) {
-        h = h+key[i]*i;
+        h = (h * 2053 + (key[i])*(key[i])) % size;
     }
-    return 1;
+    return h % size;
 }
 
 //Itemの追加が正常に完了した場合，1を返す
@@ -49,21 +49,20 @@ int add(char *key, char *value){
     long h = hash(key, map->size);
     item *p = &(map->table)[h];
     while(p->next != NULL){
-        printf("%s\n", p->next->key);
         if(strcmp(p->next->key, key) == 0){
             return 0;
         }
         p = p->next;
     }
     item *new_item = malloc(sizeof(item));
-    new_item->key = key;
-    new_item->value = value;
+    char *new_key = malloc(sizeof(char)*(K_MAX+1));
+    char *new_value = malloc(sizeof(char)*(V_MAX+1));
+    strcpy(new_key, key);
+    strcpy(new_value, value);
+    new_item->key = new_key;
+    new_item->value = new_value;
     new_item->next = NULL;
-    if(p == NULL){
-        p = new_item;
-    }else{
-        p->next = new_item;
-    }
+    p->next = new_item;
     return 1;
 }
 
@@ -92,6 +91,8 @@ int delete(char *key){
         if(strcmp(p->next->key, key) == 0){
             item *tmp = p->next;
             p->next = p->next->next;
+            free(tmp->key);
+            free(tmp->value);
             free(tmp);
             return 1;
         }
@@ -113,7 +114,7 @@ int main(int argc, char **argv){
 
     //initialize
     map = malloc(sizeof(hash_map));
-    map->table = malloc(sizeof(item) * TABLE_SIZE);
+    map->table = calloc(TABLE_SIZE,sizeof(item));
     map->size = TABLE_SIZE;
 
     if(argc >= 2){
@@ -124,7 +125,7 @@ int main(int argc, char **argv){
     }
     else fp = stdin;
     t1 = clock();
-
+    char output_buf[100];
 
     while(1){
         char buf[C_MAX+K_MAX+V_MAX+5];
@@ -145,35 +146,38 @@ int main(int argc, char **argv){
          */
         if(strcmp(command,ADD)==0){
             if(add(key,value)){
-                printf("Added item (%s,%s)\n",key,value);
+                sprintf(output_buf,"Added item (%s,%s)",key,value);
             }
             else{
-                printf("Item associated with \'%s\' already exists\n",key);
+                sprintf(output_buf,"Item associated with \'%s\' already exists",key);
             }
+            puts(output_buf);
         }
         else if(strcmp(command,CHK)==0){
             item *res;
             //辞書を検索し，keyに対応するvalue（のポインタ）をresに保存
             if((res=check(key))){
-                printf("Found:(%s:%s)\n",res->key,res->value);
+                sprintf(output_buf,"Found:(%s:%s)",res->key,res->value);
             }
             else{
-                printf("No item associated with \'%s\'\n",key);
+                sprintf(output_buf,"No item associated with \'%s\'",key);
             }
+            puts(output_buf);
         }
         else if(strcmp(command,DEL)==0){
             if(delete(key)){
-                printf("Deleted item associated with \'%s\'\n",key);
+                sprintf(output_buf,"Deleted item associated with \'%s\'",key);
             }
             else{
-                printf("No item associated with \'%s\'\n",key);
+                sprintf(output_buf,"No item associated with \'%s\'",key);
             }
+            puts(output_buf);
         }
         else if(strcmp(command,EXIT)==0){
             break;
         }
         else{
-            printf("Enter Valid Command\n");
+            puts("Enter Valid Command");
         }
     }
 
